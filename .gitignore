@@ -3,5 +3,4 @@ target/
 .vscode/
 *.class
 *.log
-*.iml
 .env
