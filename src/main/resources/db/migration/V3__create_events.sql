@@ -1,0 +1,6 @@
+CREATE TABLE events (
+    id BIGSERIAL PRIMARY KEY,
+    type VARCHAR(100) NOT NULL,
+    event_date TIMESTAMP NOT NULL,
+    capacity INTEGER NOT NULL
+);
