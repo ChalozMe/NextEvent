@@ -1,0 +1,386 @@
+/* src/pages/LoginPage.css */
+.split-login {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  font-family: 'Outfit', sans-serif;
+  background-color: #fff;
+  color: #111;
+}
+
+/* Left Side (Banner) */
+.split-login__banner {
+  flex: 1;
+  background: linear-gradient(135deg, #0A0F24 0%, #17113A 100%);
+  color: white;
+  padding: 4rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.split-login__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 4rem;
+  z-index: 10;
+}
+
+.split-login__logo-icon {
+  width: 32px;
+  height: 32px;
+  background: #4F46E5;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.split-login__badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: max-content;
+  margin-bottom: 2rem;
+  z-index: 10;
+}
+
+.split-login__title {
+  font-size: 3rem;
+  line-height: 1.1;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  z-index: 10;
+}
+
+.split-login__title-highlight {
+  color: #A78BFA;
+  display: block;
+}
+
+.split-login__subtitle {
+  font-size: 1.1rem;
+  color: #94A3B8;
+  max-width: 450px;
+  line-height: 1.5;
+  margin-bottom: 3rem;
+  z-index: 10;
+}
+
+/* Decorative Cards in Banner */
+.split-login__decorations {
+  position: relative;
+  flex: 1;
+  z-index: 10;
+}
+
+.decor-card {
+  position: absolute;
+  background: white;
+  color: #111;
+  border-radius: 1rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.decor-calendar {
+  top: 0;
+  left: 0;
+  width: 280px;
+  transform: rotate(-2deg);
+}
+.decor-tasks {
+  bottom: 0;
+  left: 50px;
+  width: 220px;
+  z-index: 2;
+  transform: rotate(2deg);
+}
+.decor-budget {
+  top: 100px;
+  right: 0;
+  width: 200px;
+  transform: rotate(3deg);
+}
+
+.split-login__trust {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  color: #CBD5E1;
+  max-width: max-content;
+  margin-top: auto;
+  z-index: 10;
+}
+.split-login__trust-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(79, 70, 229, 0.2);
+  color: #A78BFA;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Right Side (Form) */
+.split-login__form-side {
+  width: 45%;
+  min-width: 500px;
+  background: #FAFAFA;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.split-login__header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 2rem;
+  font-size: 0.9rem;
+  color: #64748B;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn-contact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4F46E5;
+  background: rgba(79, 70, 229, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.split-login__form-container {
+  margin: auto;
+  width: 100%;
+  max-width: 460px;
+  background: white;
+  padding: 3rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+}
+
+.form-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #111;
+}
+
+.form-title {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
+  text-align: center;
+  color: #64748B;
+  margin-bottom: 2.5rem;
+  font-size: 0.95rem;
+}
+
+.split-input-group {
+  margin-bottom: 1.5rem;
+}
+.split-input-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.5rem;
+}
+.split-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.split-input-icon {
+  position: absolute;
+  left: 1rem;
+  color: #94A3B8;
+  font-size: 1.1rem;
+}
+.split-input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.2s;
+  background: white;
+  color: #111;
+}
+.split-input:focus {
+  outline: none;
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+.split-input-toggle {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 0;
+}
+
+.split-form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+.split-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  cursor: pointer;
+}
+.split-forgot {
+  color: #4F46E5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.split-btn-primary {
+  width: 100%;
+  padding: 1rem;
+  background: #4F46E5;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+.split-btn-primary:hover {
+  background: #4338CA;
+}
+
+.split-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 2rem 0;
+  color: #94A3B8;
+  font-size: 0.875rem;
+}
+.split-divider::before,
+.split-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #E2E8F0;
+}
+.split-divider::before { margin-right: 1rem; }
+.split-divider::after { margin-left: 1rem; }
+
+.split-social-btns {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.split-social-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.split-social-btn:hover {
+  background: #F8FAFC;
+}
+
+.split-footer {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748B;
+}
+.split-footer button {
+  background: none;
+  border: none;
+  color: #4F46E5;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.split-error {
+  background: #FEE2E2;
+  color: #B91C1C;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Background waves for banner */
+.banner-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  opacity: 0.2;
+}
+
+@media (max-width: 1024px) {
+  .split-login {
+    flex-direction: column;
+  }
+  .split-login__banner {
+    display: none; /* Hide banner on mobile */
+  }
+  .split-login__form-side {
+    width: 100%;
+    min-width: 100%;
+    min-height: 100vh;
+  }
+  .split-login__form-container {
+    box-shadow: none;
+    background: transparent;
+  }
+}
