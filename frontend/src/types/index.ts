@@ -97,14 +97,26 @@ export interface VenueReview {
 
 // ===== Guest Types =====
 export type RSVPStatus = 'confirmado' | 'pendiente' | 'rechazado';
+export type GuestGroup = 'familia' | 'amigos' | 'trabajo' | 'otros';
 
 export interface Guest {
   id: string;
+  eventId: string;      // vincula el invitado a un evento específico
   name: string;
   email: string;
   phone?: string;
   rsvpStatus: RSVPStatus;
+  group?: GuestGroup;   // clasificación del invitado
+  invitationDate?: string; // fecha en que se envió la invitación
   table?: string;
   plusOne?: boolean;
   notes?: string;
+}
+
+// Resumen del evento al que pertenece la lista de invitados
+export interface GuestEventSummary {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
 }
