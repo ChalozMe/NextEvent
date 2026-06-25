@@ -41,6 +41,10 @@ const Sidebar = () => {
     aiTitle = '✨ ¿Necesitas ayuda?';
     aiDesc = 'Nuestra IA puede recomendar el lugar perfecto para tu evento.';
     aiBtn = 'Buscar con IA';
+  } else if (location.pathname === '/guests') {
+    aiTitle = '✨ Gestión inteligente';
+    aiDesc = 'La IA puede sugerirte la distribución de mesas y detectar invitados sin confirmar.';
+    aiBtn = 'Optimizar mesas';
   }
 
   return (
