@@ -1,367 +1,463 @@
 import { useState } from 'react';
-import type { Guest, RSVPStatus } from '../types';
+import { Link } from 'react-router-dom';
+import type { Guest, RSVPStatus, GuestGroup } from '../types';
 import './GuestManagementPage.css';
 
-// ─── Datos de ejemplo ──────────────────────────────────────────
-const initialGuests: Guest[] = [
-  { id: 'g-1', name: 'María García López', email: 'maria.garcia@email.com', phone: '+51 955 123 456', rsvpStatus: 'confirmado', table: 'Mesa 1' },
-  { id: 'g-2', name: 'Carlos Rodríguez', email: 'carlos.rod@email.com', phone: '+51 955 234 567', rsvpStatus: 'confirmado', table: 'Mesa 1' },
-  { id: 'g-3', name: 'Ana López Martínez', email: 'ana.lopez@email.com', rsvpStatus: 'pendiente', table: 'Mesa 2' },
-  { id: 'g-4', name: 'Roberto Sánchez', email: 'roberto.s@email.com', phone: '+51 955 345 678', rsvpStatus: 'confirmado', table: 'Mesa 2' },
-  { id: 'g-5', name: 'Laura Fernández', email: 'laura.f@email.com', rsvpStatus: 'rechazado' },
-  { id: 'g-6', name: 'Diego Morales', email: 'diego.morales@email.com', phone: '+51 955 456 789', rsvpStatus: 'pendiente', table: 'Mesa 3' },
-  { id: 'g-7', name: 'Sofía Herrera', email: 'sofia.h@email.com', rsvpStatus: 'confirmado', table: 'Mesa 3' },
-  { id: 'g-8', name: 'Andrés Jiménez', email: 'andres.j@email.com', phone: '+51 955 567 890', rsvpStatus: 'pendiente', table: 'Mesa 4' },
-  { id: 'g-9', name: 'Patricia Ruiz', email: 'patricia.r@email.com', rsvpStatus: 'rechazado' },
-  { id: 'g-10', name: 'Fernando Torres', email: 'fernando.t@email.com', phone: '+51 955 678 901', rsvpStatus: 'confirmado', table: 'Mesa 4' },
-];
-
-const statusLabels: Record<RSVPStatus, string> = {
-  confirmado: 'Confirmado',
-  pendiente: 'Pendiente',
-  rechazado: 'Rechazado',
+// Evento vinculado a esta lista de invitados.
+// Cuando se integre el backend se leerá desde useParams().eventId
+// y se hará fetch de los datos reales.
+const MOCK_EVENT = {
+  id: 'evt-1',
+  name: 'Boda de Juan & Ana',
+  date: '20 de Julio, 2025',
+  location: 'Hacienda Los Olivos',
 };
 
-// Valida que un string tenga formato de correo básico
+// Colores de avatar — se asignan por hash del nombre
+const AVATAR_COLORS = ['#6366F1', '#EC4899', '#F97316', '#10B981', '#3B82F6', '#8B5CF6', '#EF4444', '#F59E0B'];
+function avatarColor(name: string): string {
+  const code = name.charCodeAt(0) + (name.charCodeAt(1) ?? 0);
+  return AVATAR_COLORS[code % AVATAR_COLORS.length];
+}
+
+const GROUP_LABELS: Record<GuestGroup, string> = {
+  familia: 'Familia',
+  amigos: 'Amigos',
+  trabajo: 'Trabajo',
+  otros: 'Otros',
+};
+
+const STATUS_CONFIG: Record<RSVPStatus, { label: string; icon: string }> = {
+  confirmado: { label: 'Confirmado', icon: '✓' },
+  pendiente:  { label: 'Pendiente',  icon: '⏱' },
+  rechazado:  { label: 'Rechazado',  icon: '✗' },
+};
+
+// Datos de ejemplo vinculados al evento MOCK_EVENT.id
+const initialGuests: Guest[] = [
+  { id: 'g-1',  eventId: 'evt-1', name: 'Ana María Flores',  email: 'ana.flores@email.com',      rsvpStatus: 'confirmado', group: 'familia', invitationDate: '02 May, 2025' },
+  { id: 'g-2',  eventId: 'evt-1', name: 'Carlos López',      email: 'carlos.lopez@email.com',    rsvpStatus: 'pendiente',  group: 'amigos',  invitationDate: '02 May, 2025' },
+  { id: 'g-3',  eventId: 'evt-1', name: 'Lucía Martínez',    email: 'lucia.martinez@email.com',  rsvpStatus: 'confirmado', group: 'familia', invitationDate: '02 May, 2025' },
+  { id: 'g-4',  eventId: 'evt-1', name: 'Pedro Rodríguez',   email: 'pedro.rodriguez@email.com', rsvpStatus: 'rechazado',  group: 'trabajo', invitationDate: '03 May, 2025' },
+  { id: 'g-5',  eventId: 'evt-1', name: 'María González',    email: 'maria.gonzalez@email.com',  rsvpStatus: 'pendiente',  group: 'amigos',  invitationDate: '03 May, 2025' },
+  { id: 'g-6',  eventId: 'evt-1', name: 'Jorge Ramírez',     email: 'jorge.ramirez@email.com',   rsvpStatus: 'confirmado', group: 'trabajo', invitationDate: '04 May, 2025' },
+  { id: 'g-7',  eventId: 'evt-1', name: 'Sofía Hernández',   email: 'sofia.hernandez@email.com', rsvpStatus: 'pendiente',  group: 'familia', invitationDate: '04 May, 2025' },
+  { id: 'g-8',  eventId: 'evt-1', name: 'Diego Vargas',      email: 'diego.vargas@email.com',    rsvpStatus: 'rechazado',  group: 'amigos',  invitationDate: '04 May, 2025' },
+  { id: 'g-9',  eventId: 'evt-1', name: 'Carmen Ruiz',       email: 'carmen.ruiz@email.com',     rsvpStatus: 'confirmado', group: 'familia', invitationDate: '05 May, 2025' },
+  { id: 'g-10', eventId: 'evt-1', name: 'Rafael Morales',    email: 'rafael.morales@email.com',  rsvpStatus: 'pendiente',  group: 'amigos',  invitationDate: '05 May, 2025' },
+  { id: 'g-11', eventId: 'evt-1', name: 'Isabella Torres',   email: 'isabella.torres@email.com', rsvpStatus: 'confirmado', group: 'trabajo', invitationDate: '06 May, 2025' },
+  { id: 'g-12', eventId: 'evt-1', name: 'Luis Mendoza',      email: 'luis.mendoza@email.com',    rsvpStatus: 'pendiente',  group: 'otros',   invitationDate: '06 May, 2025' },
+];
+
+const PER_PAGE_OPTIONS = [5, 10, 20];
+
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+// Genera el array de páginas con elipsis para la paginación
+function buildPageList(current: number, total: number): (number | '...')[] {
+  if (total <= 6) return Array.from({ length: total }, (_, i) => i + 1);
+  const out: (number | '...')[] = [1];
+  if (current > 3) out.push('...');
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) out.push(p);
+  if (current < total - 2) out.push('...');
+  out.push(total);
+  return out;
+}
+
 function GuestManagementPage() {
-  const [guests, setGuests] = useState<Guest[]>(initialGuests);
+  const [guests, setGuests]           = useState<Guest[]>(initialGuests);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('Todos');
+  const [filterStatus, setFilterStatus] = useState('todos');
+  const [filterGroup,  setFilterGroup]  = useState('todos');
+  const [currentPage,  setCurrentPage]  = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Modal: agregar invitado individual
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [formName, setFormName] = useState('');
+  // Modales
+  const [isAddOpen,  setIsAddOpen]  = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [isRsvpOpen, setIsRsvpOpen] = useState(false);
+
+  // Form agregar invitado
+  const [formName,  setFormName]  = useState('');
   const [formEmail, setFormEmail] = useState('');
-  const [formPhone, setFormPhone] = useState('');
-  const [formTable, setFormTable] = useState('');
+  const [formGroup, setFormGroup] = useState<GuestGroup>('familia');
 
-  // Modal: importación masiva de correos (RF09)
-  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
-  const [bulkEmailsRaw, setBulkEmailsRaw] = useState('');
+  // Importación masiva
+  const [bulkRaw, setBulkRaw] = useState('');
 
-  // Modal: vista previa de invitación RSVP (RF10)
-  const [isRsvpPreviewOpen, setIsRsvpPreviewOpen] = useState(false);
+  // Feedback
+  const [alertMsg,  setAlertMsg]  = useState('');
+  const [showAlert, setShowAlert] = useState(false);
 
-  // Feedback de envío
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  // ── Métricas del evento ──────────────────────────────────
+  const confirmedCount  = guests.filter(g => g.rsvpStatus === 'confirmado').length;
+  const pendingCount    = guests.filter(g => g.rsvpStatus === 'pendiente').length;
+  const rejectedCount   = guests.filter(g => g.rsvpStatus === 'rechazado').length;
+  const confirmRate     = guests.length ? (confirmedCount / guests.length) * 100 : 0;
+  const pendingRate     = guests.length ? (pendingCount  / guests.length) * 100 : 0;
+  const rejectedRate    = guests.length ? (rejectedCount / guests.length) * 100 : 0;
 
-  // ── Contadores ──────────────────────────────────────────────
-  const confirmedCount = guests.filter((g) => g.rsvpStatus === 'confirmado').length;
-  const pendingCount   = guests.filter((g) => g.rsvpStatus === 'pendiente').length;
-  const rejectedCount  = guests.filter((g) => g.rsvpStatus === 'rechazado').length;
-
-  // ── Filtrado ─────────────────────────────────────────────────
-  const filteredGuests = guests.filter((guest) => {
-    const matchesSearch =
-      guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      guest.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterStatus === 'Todos' || guest.rsvpStatus === filterStatus;
-    return matchesSearch && matchesFilter;
+  // ── Filtrado ─────────────────────────────────────────────
+  const filtered = guests.filter(g => {
+    const q = searchQuery.toLowerCase();
+    return (
+      (g.name.toLowerCase().includes(q) || g.email.toLowerCase().includes(q)) &&
+      (filterStatus === 'todos' || g.rsvpStatus === filterStatus) &&
+      (filterGroup  === 'todos' || g.group === filterGroup)
+    );
   });
 
-  // ── Lógica: agregar invitado individual ──────────────────────
-  const handleAddGuest = () => {
-    if (!formName.trim() || !formEmail.trim()) return;
+  // ── Paginación ───────────────────────────────────────────
+  const totalPages     = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  const safePage       = Math.min(currentPage, totalPages);
+  const pageStart      = (safePage - 1) * itemsPerPage;
+  const pageGuests     = filtered.slice(pageStart, pageStart + itemsPerPage);
+  const pageList       = buildPageList(safePage, totalPages);
+  const showingFrom    = filtered.length === 0 ? 0 : pageStart + 1;
+  const showingTo      = Math.min(pageStart + itemsPerPage, filtered.length);
 
-    const newGuest: Guest = {
-      id: `g-${Date.now()}`,
-      name: formName.trim(),
-      email: formEmail.trim(),
-      phone: formPhone.trim() || undefined,
-      rsvpStatus: 'pendiente',
-      table: formTable.trim() || undefined,
-    };
-
-    setGuests((prev) => [...prev, newGuest]);
-    setFormName('');
-    setFormEmail('');
-    setFormPhone('');
-    setFormTable('');
-    setIsAddModalOpen(false);
-
-    showFeedback('Invitado agregado correctamente.');
-  };
-
-  const handleDeleteGuest = (id: string) => {
-    setGuests((prev) => prev.filter((g) => g.id !== id));
-  };
-
-  // ── RF10: Envío de invitaciones RSVP ────────────────────────
-  // Simula el envío; en producción dispararía un endpoint de email
-  const handleSendInvitations = () => {
-    setIsRsvpPreviewOpen(false);
-    showFeedback(`📨 Invitaciones enviadas a ${pendingCount} invitado${pendingCount !== 1 ? 's' : ''} pendiente${pendingCount !== 1 ? 's' : ''}.`);
-  };
-
-  function showFeedback(msg: string) {
-    setSuccessMessage(msg);
-    setShowSuccessAlert(true);
-    setTimeout(() => setShowSuccessAlert(false), 4000);
+  function goToPage(p: number) {
+    setCurrentPage(Math.max(1, Math.min(p, totalPages)));
   }
 
-  // ── RF09: Parseo de correos en bulk ─────────────────────────
-  // Separa por coma, punto y coma o salto de línea
-  const parsedEmails = bulkEmailsRaw
-    .split(/[\n,;]+/)
-    .map((e) => e.trim())
-    .filter(Boolean);
-
-  const handleBulkImport = () => {
-    const validEmails = parsedEmails.filter(isValidEmail);
-    if (validEmails.length === 0) return;
-
-    const newGuests: Guest[] = validEmails.map((email, i) => ({
-      id: `g-bulk-${Date.now()}-${i}`,
-      name: email.split('@')[0], // nombre provisional hasta que el invitado confirme datos
-      email,
+  // ── Handlers ─────────────────────────────────────────────
+  function handleAddGuest() {
+    if (!formName.trim() || !formEmail.trim()) return;
+    const today = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+    setGuests(prev => [...prev, {
+      id: `g-${Date.now()}`,
+      eventId: MOCK_EVENT.id,
+      name: formName.trim(),
+      email: formEmail.trim(),
       rsvpStatus: 'pendiente',
-    }));
+      group: formGroup,
+      invitationDate: today,
+    }]);
+    setFormName(''); setFormEmail(''); setFormGroup('familia');
+    setIsAddOpen(false);
+    flash(`Invitado "${formName.trim()}" agregado.`);
+  }
 
-    setGuests((prev) => [...prev, ...newGuests]);
-    setBulkEmailsRaw('');
-    setIsBulkModalOpen(false);
+  function handleDelete(id: string) {
+    setGuests(prev => prev.filter(g => g.id !== id));
+  }
 
-    showFeedback(`✅ ${validEmails.length} correo${validEmails.length !== 1 ? 's' : ''} importado${validEmails.length !== 1 ? 's' : ''} correctamente.`);
-  };
+  const parsedEmails = bulkRaw.split(/[\n,;]+/).map(e => e.trim()).filter(Boolean);
+  const validEmails  = parsedEmails.filter(isValidEmail);
+
+  function handleBulkImport() {
+    if (!validEmails.length) return;
+    const today = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' });
+    setGuests(prev => [...prev, ...validEmails.map((email, i) => ({
+      id: `g-bulk-${Date.now()}-${i}`,
+      eventId: MOCK_EVENT.id,
+      name: email.split('@')[0],
+      email,
+      rsvpStatus: 'pendiente' as RSVPStatus,
+      group: 'otros' as GuestGroup,
+      invitationDate: today,
+    }))]);
+    setBulkRaw('');
+    setIsBulkOpen(false);
+    flash(`${validEmails.length} correo${validEmails.length !== 1 ? 's' : ''} importado${validEmails.length !== 1 ? 's' : ''}.`);
+  }
+
+  function handleSendInvitations() {
+    setIsRsvpOpen(false);
+    flash(`📨 Invitaciones enviadas a ${pendingCount} invitados pendientes.`);
+  }
+
+  function flash(msg: string) {
+    setAlertMsg(msg);
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 4000);
+  }
 
   return (
     <div className="guests animate-fade-in">
 
-      {/* ── Encabezado ──────────────────────────────────────── */}
-      <div className="guests__header">
-        <div className="guests__header-text">
-          <h1 className="guests__title">Gestión de Invitados</h1>
-          <p className="guests__subtitle">
-            Administra tu lista de invitados y envía invitaciones RSVP por correo
-          </p>
+      {/* Breadcrumb + botón agregar */}
+      <div className="guests__topbar">
+        <nav className="breadcrumb">
+          <Link to="/" className="breadcrumb__link">Eventos</Link>
+          <span className="breadcrumb__sep">›</span>
+          <Link to="/" className="breadcrumb__link">{MOCK_EVENT.name}</Link>
+          <span className="breadcrumb__sep">›</span>
+          <span className="breadcrumb__current">Invitados RSVP</span>
+        </nav>
+        <div className="guests__topbar-actions">
+          <button className="bell-btn" type="button" aria-label="Notificaciones">
+            🔔
+            {pendingCount > 0 && <span className="bell-badge">{pendingCount}</span>}
+          </button>
+          <button className="btn-add-guests" onClick={() => setIsAddOpen(true)} type="button">
+            + Agregar invitados
+          </button>
         </div>
       </div>
 
-      {/* ── Alerta de feedback ──────────────────────────────── */}
-      {showSuccessAlert && (
-        <div className="alert alert--success animate-fade-in-down">
-          {successMessage}
-        </div>
+      {/* Título */}
+      <div className="guests__header">
+        <h1 className="guests__title">👥 Invitados RSVP</h1>
+        <p className="guests__subtitle">
+          Gestiona la lista de invitados, envía invitaciones y realiza seguimiento de confirmaciones.
+        </p>
+      </div>
+
+      {showAlert && (
+        <div className="alert alert--success animate-fade-in-down">{alertMsg}</div>
       )}
 
-      {/* ── Contadores ──────────────────────────────────────── */}
-      <div className="guests__counters">
-        <div className="guests__counter guests__counter--total">
-          <span className="guests__counter-icon">👥</span>
-          <div className="guests__counter-info">
-            <span className="guests__counter-value">{guests.length}</span>
-            <span className="guests__counter-label">Total</span>
+      {/* Tarjeta del evento vinculado */}
+      <div className="event-card">
+        <div className="event-card__placeholder">🎊</div>
+
+        <div className="event-card__info">
+          <h2 className="event-card__name">{MOCK_EVENT.name}</h2>
+          <p className="event-card__meta">📅 {MOCK_EVENT.date}</p>
+          <p className="event-card__meta">📍 {MOCK_EVENT.location}</p>
+        </div>
+
+        <div className="event-card__divider" />
+
+        <div className="event-card__stats">
+          <div className="event-stat">
+            <span className="event-stat__value">{guests.length}</span>
+            <span className="event-stat__label">Invitados totales</span>
+          </div>
+          <div className="event-stat">
+            <span className="event-stat__value event-stat__value--green">
+              {confirmedCount} <small>{confirmRate.toFixed(1)}%</small>
+            </span>
+            <span className="event-stat__label">Confirmados</span>
+          </div>
+          <div className="event-stat">
+            <span className="event-stat__value event-stat__value--orange">
+              {pendingCount} <small>{pendingRate.toFixed(1)}%</small>
+            </span>
+            <span className="event-stat__label">Pendientes</span>
+          </div>
+          <div className="event-stat">
+            <span className="event-stat__value event-stat__value--red">
+              {rejectedCount} <small>{rejectedRate.toFixed(1)}%</small>
+            </span>
+            <span className="event-stat__label">Rechazados</span>
           </div>
         </div>
-        <div className="guests__counter guests__counter--confirmed">
-          <span className="guests__counter-icon">✅</span>
-          <div className="guests__counter-info">
-            <span className="guests__counter-value">{confirmedCount}</span>
-            <span className="guests__counter-label">Confirmados</span>
+
+        {/* Gauge circular — tasa de confirmación */}
+        <div className="event-card__gauge">
+          <div
+            className="gauge-ring"
+            style={{
+              background: `conic-gradient(#6366F1 0% ${confirmRate}%, #E2E8F0 ${confirmRate}% 100%)`,
+            }}
+          >
+            <div className="gauge-ring__inner">
+              <span className="gauge-ring__pct">{confirmRate.toFixed(1)}%</span>
+            </div>
           </div>
-        </div>
-        <div className="guests__counter guests__counter--pending">
-          <span className="guests__counter-icon">⏳</span>
-          <div className="guests__counter-info">
-            <span className="guests__counter-value">{pendingCount}</span>
-            <span className="guests__counter-label">Pendientes</span>
-          </div>
-        </div>
-        <div className="guests__counter guests__counter--rejected">
-          <span className="guests__counter-icon">❌</span>
-          <div className="guests__counter-info">
-            <span className="guests__counter-value">{rejectedCount}</span>
-            <span className="guests__counter-label">Rechazados</span>
-          </div>
+          <span className="gauge-ring__label">Tasa de confirmación</span>
         </div>
       </div>
 
-      {/* ── Barra de herramientas ────────────────────────────── */}
+      {/* Barra de herramientas */}
       <div className="guests__toolbar">
         <div className="guests__toolbar-left">
-          <div className="guests__search-wrapper">
-            <span className="guests__search-icon">🔍</span>
+          <div className="search-box">
+            <span className="search-box__icon">🔍</span>
             <input
               type="text"
-              className="guests__search-input"
-              placeholder="Buscar por nombre o correo..."
+              className="search-box__input"
+              placeholder="Buscar invitado por nombre o correo..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             />
           </div>
-          <select
-            className="guests__filter-select"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="Todos">Todos</option>
-            <option value="confirmado">Confirmados</option>
-            <option value="pendiente">Pendientes</option>
-            <option value="rechazado">Rechazados</option>
-          </select>
+
+          <div className="filter-select-wrapper">
+            <span className="filter-select-wrapper__label">Estado:</span>
+            <select className="filter-select" value={filterStatus}
+              onChange={e => { setFilterStatus(e.target.value); setCurrentPage(1); }}>
+              <option value="todos">Todos</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="rechazado">Rechazado</option>
+            </select>
+          </div>
+
+          <div className="filter-select-wrapper">
+            <span className="filter-select-wrapper__label">Grupo:</span>
+            <select className="filter-select" value={filterGroup}
+              onChange={e => { setFilterGroup(e.target.value); setCurrentPage(1); }}>
+              <option value="todos">Todos</option>
+              <option value="familia">Familia</option>
+              <option value="amigos">Amigos</option>
+              <option value="trabajo">Trabajo</option>
+              <option value="otros">Otros</option>
+            </select>
+          </div>
         </div>
 
         <div className="guests__toolbar-right">
-          {/* RF10: abrir vista previa del email RSVP antes de enviar */}
-          <button
-            className="guests__btn guests__btn--secondary"
-            onClick={() => setIsRsvpPreviewOpen(true)}
-            type="button"
-          >
-            📨 Enviar Invitaciones
+          <button className="btn-import" onClick={() => setIsBulkOpen(true)} type="button">
+            ↑ Importar lista
           </button>
-
-          {/* RF09: importar lista de correos */}
-          <button
-            className="guests__btn guests__btn--secondary"
-            onClick={() => setIsBulkModalOpen(true)}
-            type="button"
-          >
-            📋 Importar correos
-          </button>
-
-          <button
-            className="guests__btn guests__btn--primary"
-            onClick={() => setIsAddModalOpen(true)}
-            type="button"
-          >
-            ➕ Agregar Invitado
+          <button className="btn-send-rsvp" onClick={() => setIsRsvpOpen(true)} type="button">
+            ✉ Enviar invitaciones
           </button>
         </div>
       </div>
 
-      {/* ── Tabla de invitados ───────────────────────────────── */}
+      {/* Tabla de invitados */}
       <div className="guests__table-wrapper">
         <table className="guests__table">
           <thead>
             <tr>
+              <th><input type="checkbox" className="table-checkbox" /></th>
               <th>Nombre</th>
-              <th>Correo Electrónico</th>
+              <th>Correo electrónico</th>
+              <th>Grupo</th>
               <th>Estado RSVP</th>
-              <th>Mesa</th>
+              <th>Fecha de invitación</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {filteredGuests.map((guest, index) => (
-              <tr
-                key={guest.id}
-                className="guests__row animate-fade-in-up"
-                style={{ animationDelay: `${index * 40}ms` }}
-              >
-                <td>
-                  <div className="guests__name-cell">
-                    <div className="guests__avatar">
-                      {guest.name.charAt(0).toUpperCase()}
+            {pageGuests.map((guest, i) => {
+              const cfg   = STATUS_CONFIG[guest.rsvpStatus];
+              const color = avatarColor(guest.name);
+              const initials = guest.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+              return (
+                <tr key={guest.id} className="guests__row animate-fade-in-up"
+                  style={{ animationDelay: `${i * 35}ms` }}>
+                  <td><input type="checkbox" className="table-checkbox" /></td>
+                  <td>
+                    <div className="guest-name-cell">
+                      <div className="guest-avatar" style={{ background: color }}>
+                        {initials}
+                      </div>
+                      <span className="guest-name">{guest.name}</span>
                     </div>
-                    <span className="guests__name">{guest.name}</span>
-                  </div>
-                </td>
-                <td>
-                  <span className="guests__email">{guest.email}</span>
-                </td>
-                <td>
-                  <span className={`rsvp-badge rsvp-badge--${guest.rsvpStatus}`}>
-                    {statusLabels[guest.rsvpStatus]}
-                  </span>
-                </td>
-                <td>
-                  <span className="guests__table-name">{guest.table || '—'}</span>
-                </td>
-                <td>
-                  <div className="guests__actions">
-                    <button className="guests__action-btn guests__action-btn--edit" title="Editar" type="button">
-                      ✏️
-                    </button>
+                  </td>
+                  <td><span className="guest-email">{guest.email}</span></td>
+                  <td>
+                    {guest.group && (
+                      <span className={`group-badge group-badge--${guest.group}`}>
+                        {GROUP_LABELS[guest.group]}
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <span className={`rsvp-status rsvp-status--${guest.rsvpStatus}`}>
+                      <span className={`rsvp-icon rsvp-icon--${guest.rsvpStatus}`}>
+                        {cfg.icon}
+                      </span>
+                      {cfg.label}
+                    </span>
+                  </td>
+                  <td><span className="invitation-date">{guest.invitationDate ?? '—'}</span></td>
+                  <td>
                     <button
-                      className="guests__action-btn guests__action-btn--delete"
-                      title="Eliminar"
-                      onClick={() => handleDeleteGuest(guest.id)}
+                      className="action-dots"
+                      title="Acciones"
+                      onClick={() => handleDelete(guest.id)}
                       type="button"
                     >
-                      🗑️
+                      •••
                     </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filteredGuests.length === 0 && (
+                  </td>
+                </tr>
+              );
+            })}
+            {pageGuests.length === 0 && (
               <tr>
-                <td colSpan={5} className="guests__empty-row">
-                  <span className="guests__empty-icon">👥</span>
-                  No se encontraron invitados con los filtros actuales
+                <td colSpan={7} className="table-empty">
+                  No se encontraron invitados con los filtros actuales.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+
+        {/* Paginación */}
+        <div className="pagination">
+          <span className="pagination__info">
+            Mostrando {showingFrom} a {showingTo} de {filtered.length} invitados
+          </span>
+
+          <div className="pagination__pages">
+            <button className="page-btn" onClick={() => goToPage(safePage - 1)}
+              disabled={safePage === 1} type="button">‹</button>
+
+            {pageList.map((item, idx) =>
+              item === '...'
+                ? <span key={`ellipsis-${idx}`} className="page-ellipsis">…</span>
+                : (
+                  <button
+                    key={item}
+                    className={`page-btn ${item === safePage ? 'page-btn--active' : ''}`}
+                    onClick={() => goToPage(item as number)}
+                    type="button"
+                  >
+                    {item}
+                  </button>
+                )
+            )}
+
+            <button className="page-btn" onClick={() => goToPage(safePage + 1)}
+              disabled={safePage === totalPages} type="button">›</button>
+          </div>
+
+          <div className="pagination__per-page">
+            <span>Mostrar</span>
+            <select className="per-page-select" value={itemsPerPage}
+              onChange={e => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
+              {PER_PAGE_OPTIONS.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+            <span>por página</span>
+          </div>
+        </div>
       </div>
 
-      {/* ── Modal: agregar invitado individual ─────────────── */}
-      {isAddModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsAddModalOpen(false)}>
-          <div className="modal animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {/* ── Modal: agregar invitado ─────────────────────────── */}
+      {isAddOpen && (
+        <div className="modal-overlay" onClick={() => setIsAddOpen(false)}>
+          <div className="modal animate-scale-in" onClick={e => e.stopPropagation()}>
             <div className="modal__header">
-              <h2 className="modal__title">Agregar Invitado</h2>
-              <button className="modal__close" onClick={() => setIsAddModalOpen(false)} type="button">✕</button>
+              <h2 className="modal__title">Agregar invitado</h2>
+              <button className="modal__close" onClick={() => setIsAddOpen(false)} type="button">✕</button>
             </div>
             <div className="modal__body">
               <div className="modal__field">
                 <label className="modal__label">Nombre *</label>
-                <input
-                  type="text"
-                  className="modal__input"
-                  placeholder="Nombre completo"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                />
+                <input className="modal__input" type="text" placeholder="Nombre completo"
+                  value={formName} onChange={e => setFormName(e.target.value)} />
               </div>
               <div className="modal__field">
-                <label className="modal__label">Correo Electrónico *</label>
-                <input
-                  type="email"
-                  className="modal__input"
-                  placeholder="correo@ejemplo.com"
-                  value={formEmail}
-                  onChange={(e) => setFormEmail(e.target.value)}
-                />
+                <label className="modal__label">Correo electrónico *</label>
+                <input className="modal__input" type="email" placeholder="correo@ejemplo.com"
+                  value={formEmail} onChange={e => setFormEmail(e.target.value)} />
               </div>
               <div className="modal__field">
-                <label className="modal__label">Teléfono (opcional)</label>
-                <input
-                  type="tel"
-                  className="modal__input"
-                  placeholder="+51 955 123 456"
-                  value={formPhone}
-                  onChange={(e) => setFormPhone(e.target.value)}
-                />
-              </div>
-              <div className="modal__field">
-                <label className="modal__label">Mesa (opcional)</label>
-                <input
-                  type="text"
-                  className="modal__input"
-                  placeholder="Ej: Mesa 5"
-                  value={formTable}
-                  onChange={(e) => setFormTable(e.target.value)}
-                />
+                <label className="modal__label">Grupo</label>
+                <select className="modal__select" value={formGroup}
+                  onChange={e => setFormGroup(e.target.value as GuestGroup)}>
+                  <option value="familia">Familia</option>
+                  <option value="amigos">Amigos</option>
+                  <option value="trabajo">Trabajo</option>
+                  <option value="otros">Otros</option>
+                </select>
               </div>
             </div>
             <div className="modal__footer">
-              <button className="modal__btn modal__btn--cancel" onClick={() => setIsAddModalOpen(false)} type="button">
+              <button className="modal__btn modal__btn--cancel" onClick={() => setIsAddOpen(false)} type="button">
                 Cancelar
               </button>
-              <button
-                className="modal__btn modal__btn--submit"
-                onClick={handleAddGuest}
-                disabled={!formName.trim() || !formEmail.trim()}
-                type="button"
-              >
+              <button className="modal__btn modal__btn--submit" onClick={handleAddGuest}
+                disabled={!formName.trim() || !formEmail.trim()} type="button">
                 Agregar
               </button>
             </div>
@@ -369,38 +465,28 @@ function GuestManagementPage() {
         </div>
       )}
 
-      {/* ── Modal: importación masiva de correos (RF09) ─────── */}
-      {isBulkModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsBulkModalOpen(false)}>
-          <div className="modal modal--wide animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {/* ── Modal: importar lista de correos ────────────────── */}
+      {isBulkOpen && (
+        <div className="modal-overlay" onClick={() => setIsBulkOpen(false)}>
+          <div className="modal modal--wide animate-scale-in" onClick={e => e.stopPropagation()}>
             <div className="modal__header">
-              <h2 className="modal__title">📋 Importar lista de correos</h2>
-              <button className="modal__close" onClick={() => setIsBulkModalOpen(false)} type="button">✕</button>
+              <h2 className="modal__title">↑ Importar lista de correos</h2>
+              <button className="modal__close" onClick={() => setIsBulkOpen(false)} type="button">✕</button>
             </div>
             <div className="modal__body">
               <div className="modal__field">
-                <label className="modal__label">Lista de correos electrónicos</label>
-                <span className="modal__hint">
-                  Separa los correos con comas, punto y coma o saltos de línea.
-                </span>
-                <textarea
-                  className="modal__textarea"
+                <label className="modal__label">Correos electrónicos</label>
+                <span className="modal__hint">Separa con comas, punto y coma o saltos de línea.</span>
+                <textarea className="modal__textarea"
                   placeholder={"juan@correo.com\nmaria@correo.com, pedro@empresa.com"}
-                  value={bulkEmailsRaw}
-                  onChange={(e) => setBulkEmailsRaw(e.target.value)}
-                />
+                  value={bulkRaw} onChange={e => setBulkRaw(e.target.value)} />
               </div>
-
-              {/* Vista previa de correos ingresados */}
               {parsedEmails.length > 0 && (
                 <div className="modal__field">
-                  <label className="modal__label">Vista previa ({parsedEmails.length} correo{parsedEmails.length !== 1 ? 's' : ''})</label>
+                  <label className="modal__label">Vista previa ({parsedEmails.length})</label>
                   <div className="bulk-preview">
                     {parsedEmails.map((email, i) => (
-                      <div
-                        key={i}
-                        className={`bulk-preview__item ${isValidEmail(email) ? 'bulk-preview__item--valid' : 'bulk-preview__item--invalid'}`}
-                      >
+                      <div key={i} className={`bulk-preview__item bulk-preview__item--${isValidEmail(email) ? 'valid' : 'invalid'}`}>
                         <span>{isValidEmail(email) ? '✓' : '✗'}</span>
                         <span>{email}</span>
                       </div>
@@ -410,71 +496,55 @@ function GuestManagementPage() {
               )}
             </div>
             <div className="modal__footer">
-              <button className="modal__btn modal__btn--cancel" onClick={() => setIsBulkModalOpen(false)} type="button">
+              <button className="modal__btn modal__btn--cancel" onClick={() => setIsBulkOpen(false)} type="button">
                 Cancelar
               </button>
-              <button
-                className="modal__btn modal__btn--submit"
-                onClick={handleBulkImport}
-                disabled={parsedEmails.filter(isValidEmail).length === 0}
-                type="button"
-              >
-                Importar {parsedEmails.filter(isValidEmail).length} correo{parsedEmails.filter(isValidEmail).length !== 1 ? 's' : ''}
+              <button className="modal__btn modal__btn--submit" onClick={handleBulkImport}
+                disabled={validEmails.length === 0} type="button">
+                Importar {validEmails.length} correo{validEmails.length !== 1 ? 's' : ''}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Modal: vista previa de email RSVP (RF10) ────────── */}
-      {isRsvpPreviewOpen && (
-        <div className="modal-overlay" onClick={() => setIsRsvpPreviewOpen(false)}>
-          <div className="modal modal--wide animate-scale-in" onClick={(e) => e.stopPropagation()}>
+      {/* ── Modal: vista previa de invitación RSVP ──────────── */}
+      {isRsvpOpen && (
+        <div className="modal-overlay" onClick={() => setIsRsvpOpen(false)}>
+          <div className="modal modal--wide animate-scale-in" onClick={e => e.stopPropagation()}>
             <div className="modal__header">
-              <h2 className="modal__title">📨 Vista previa — Invitación RSVP</h2>
-              <button className="modal__close" onClick={() => setIsRsvpPreviewOpen(false)} type="button">✕</button>
+              <h2 className="modal__title">✉ Vista previa — Invitación RSVP</h2>
+              <button className="modal__close" onClick={() => setIsRsvpOpen(false)} type="button">✕</button>
             </div>
             <div className="modal__body">
-              <p style={{ fontSize: '0.9rem', color: '#64748B', margin: 0 }}>
-                Este correo se enviará a los <strong>{pendingCount} invitados con estado pendiente</strong>.
-                Cada enlace es dinámico y único por destinatario.
+              <p style={{ fontSize: '0.875rem', color: '#64748B', margin: 0 }}>
+                Este correo se enviará a los <strong>{pendingCount} invitados pendientes</strong>.
+                Cada enlace es único por destinatario.
               </p>
-
-              {/* Preview del email que recibirá el invitado */}
               <div className="rsvp-preview">
-                <div className="rsvp-preview__email-header">
+                <div className="rsvp-preview__meta">
                   <span><strong>De:</strong> NexEvent &lt;invitaciones@nexevent.com&gt;</span>
                   <span><strong>Para:</strong> [nombre del invitado]</span>
-                  <span><strong>Asunto:</strong> Tienes una invitación para Boda García – López 💌</span>
+                  <span><strong>Asunto:</strong> Tienes una invitación — {MOCK_EVENT.name} 💌</span>
                 </div>
-                <div className="rsvp-preview__email-body">
-                  <p className="rsvp-preview__greeting">
-                    Hola <strong>[Nombre del invitado]</strong>, 👋<br /><br />
-                    Tienes una invitación especial para el evento <strong>Boda García – López</strong>
-                    {' '}el próximo <strong>15 de noviembre, 2025</strong> en el Salón Royal.<br /><br />
-                    Por favor, confirma tu asistencia haciendo clic en uno de los botones:
-                  </p>
-                  <div className="rsvp-preview__actions">
-                    <button className="rsvp-btn rsvp-btn--accept" type="button">
-                      ✅ Asistiré
-                    </button>
-                    <button className="rsvp-btn rsvp-btn--decline" type="button">
-                      ❌ No Asistiré
-                    </button>
+                <div className="rsvp-preview__body">
+                  Hola <strong>[Nombre]</strong>, 👋<br /><br />
+                  Tienes una invitación para <strong>{MOCK_EVENT.name}</strong> el{' '}
+                  <strong>{MOCK_EVENT.date}</strong> en {MOCK_EVENT.location}.<br /><br />
+                  Confirma tu asistencia:
+                  <div className="rsvp-preview__btns">
+                    <button className="rsvp-btn rsvp-btn--accept" type="button">✅ Asistiré</button>
+                    <button className="rsvp-btn rsvp-btn--decline" type="button">❌ No Asistiré</button>
                   </div>
                 </div>
               </div>
             </div>
             <div className="modal__footer">
-              <button className="modal__btn modal__btn--cancel" onClick={() => setIsRsvpPreviewOpen(false)} type="button">
+              <button className="modal__btn modal__btn--cancel" onClick={() => setIsRsvpOpen(false)} type="button">
                 Cancelar
               </button>
-              <button
-                className="modal__btn modal__btn--submit"
-                onClick={handleSendInvitations}
-                disabled={pendingCount === 0}
-                type="button"
-              >
+              <button className="modal__btn modal__btn--submit" onClick={handleSendInvitations}
+                disabled={pendingCount === 0} type="button">
                 Enviar a {pendingCount} invitado{pendingCount !== 1 ? 's' : ''}
               </button>
             </div>
