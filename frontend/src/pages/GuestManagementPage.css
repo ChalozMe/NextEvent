@@ -194,74 +194,64 @@
 .event-stat {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
-.event-stat__value {
-  font-size: 1.6rem;
+.event-stat__label {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  white-space: nowrap;
+}
+
+/* Fila: número grande + porcentaje coloreado */
+.event-stat__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.event-stat__num {
+  font-size: 1.75rem;
   font-weight: 700;
   color: #0F172A;
   line-height: 1;
-  display: flex;
-  align-items: baseline;
-  gap: 0.35rem;
 }
 
-.event-stat__value small {
+.event-stat__pct {
   font-size: 0.8rem;
-  font-weight: 500;
-  color: #64748B;
+  font-weight: 600;
 }
+.event-stat__pct--green  { color: #059669; }
+.event-stat__pct--orange { color: #D97706; }
+.event-stat__pct--red    { color: #DC2626; }
 
-.event-stat__value--green { color: #059669; }
-.event-stat__value--orange { color: #D97706; }
-.event-stat__value--red { color: #DC2626; }
-
-.event-stat__label {
-  font-size: 0.75rem;
-  color: #94A3B8;
-}
-
-/* Gauge circular */
+/* Gauge SVG — ring + texto a la derecha */
 .event-card__gauge {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-shrink: 0;
 }
 
-.gauge-ring {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.gauge-svg-wrapper { flex-shrink: 0; }
 
-.gauge-ring__inner {
-  width: 60px;
-  height: 60px;
-  background: white;
-  border-radius: 50%;
+.gauge-text {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  gap: 0.1rem;
 }
 
-.gauge-ring__pct {
-  font-size: 0.85rem;
+.gauge-pct {
+  font-size: 1.3rem;
   font-weight: 700;
   color: #0F172A;
+  line-height: 1;
 }
 
-.gauge-ring__label {
-  font-size: 0.72rem;
+.gauge-label {
+  font-size: 0.7rem;
   color: #94A3B8;
-  text-align: center;
-  max-width: 80px;
+  max-width: 72px;
   line-height: 1.3;
 }
 

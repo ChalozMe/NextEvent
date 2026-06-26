@@ -224,42 +224,52 @@ function GuestManagementPage() {
 
         <div className="event-card__stats">
           <div className="event-stat">
-            <span className="event-stat__value">{guests.length}</span>
             <span className="event-stat__label">Invitados totales</span>
+            <div className="event-stat__row">
+              <span className="event-stat__num">{guests.length}</span>
+            </div>
           </div>
           <div className="event-stat">
-            <span className="event-stat__value event-stat__value--green">
-              {confirmedCount} <small>{confirmRate.toFixed(1)}%</small>
-            </span>
             <span className="event-stat__label">Confirmados</span>
+            <div className="event-stat__row">
+              <span className="event-stat__num">{confirmedCount}</span>
+              <span className="event-stat__pct event-stat__pct--green">{confirmRate.toFixed(1)}%</span>
+            </div>
           </div>
           <div className="event-stat">
-            <span className="event-stat__value event-stat__value--orange">
-              {pendingCount} <small>{pendingRate.toFixed(1)}%</small>
-            </span>
             <span className="event-stat__label">Pendientes</span>
+            <div className="event-stat__row">
+              <span className="event-stat__num">{pendingCount}</span>
+              <span className="event-stat__pct event-stat__pct--orange">{pendingRate.toFixed(1)}%</span>
+            </div>
           </div>
           <div className="event-stat">
-            <span className="event-stat__value event-stat__value--red">
-              {rejectedCount} <small>{rejectedRate.toFixed(1)}%</small>
-            </span>
             <span className="event-stat__label">Rechazados</span>
+            <div className="event-stat__row">
+              <span className="event-stat__num">{rejectedCount}</span>
+              <span className="event-stat__pct event-stat__pct--red">{rejectedRate.toFixed(1)}%</span>
+            </div>
           </div>
         </div>
 
-        {/* Gauge circular — tasa de confirmación */}
+        {/* Gauge SVG — tasa de confirmación */}
         <div className="event-card__gauge">
-          <div
-            className="gauge-ring"
-            style={{
-              background: `conic-gradient(#6366F1 0% ${confirmRate}%, #E2E8F0 ${confirmRate}% 100%)`,
-            }}
-          >
-            <div className="gauge-ring__inner">
-              <span className="gauge-ring__pct">{confirmRate.toFixed(1)}%</span>
-            </div>
+          <div className="gauge-svg-wrapper">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="#E2E8F0" strokeWidth="5" />
+              <circle
+                cx="32" cy="32" r="26" fill="none"
+                stroke="#10B981" strokeWidth="5"
+                strokeLinecap="round"
+                strokeDasharray={`${(confirmRate / 100) * 2 * Math.PI * 26} ${2 * Math.PI * 26}`}
+                transform="rotate(-90 32 32)"
+              />
+            </svg>
           </div>
-          <span className="gauge-ring__label">Tasa de confirmación</span>
+          <div className="gauge-text">
+            <span className="gauge-pct">{confirmRate.toFixed(1)}%</span>
+            <span className="gauge-label">Tasa de confirmación</span>
+          </div>
         </div>
       </div>
 
