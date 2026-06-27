@@ -44,7 +44,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok -->
+    <!-- Lombok --> <!-- No funciona xd :p -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -60,6 +60,12 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- security, crypto password -->
+        <dependency>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
         <!-- Tests -->
@@ -101,7 +107,19 @@
                     </execution>
 
                 </executions>
-            </plugin>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>org.projectlombok</groupId>
+                  <artifactId>lombok</artifactId>
+                </path>
+              </annotationProcessorPaths>
+            </configuration>
+          </plugin>
 
         </plugins>
     </build>
