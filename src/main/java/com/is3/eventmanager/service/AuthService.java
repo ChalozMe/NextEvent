@@ -4,6 +4,7 @@ import com.is3.eventmanager.dto.RegisterRequest;
 import com.is3.eventmanager.entity.User;
 import com.is3.eventmanager.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
 
@@ -11,9 +12,11 @@ import java.time.LocalDateTime;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository) {
+    public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder =  passwordEncoder;
     }
 
     public void register(RegisterRequest request) {
@@ -24,7 +27,8 @@ public class AuthService {
         user.setEmail(request.getEmail());
 
         // temporalmente SIN BCrypt
-        user.setPasswordHash(request.getPassword());
+        // user.setPasswordHash(request.getPassword());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
         user.setCreatedAt(LocalDateTime.now());
 
