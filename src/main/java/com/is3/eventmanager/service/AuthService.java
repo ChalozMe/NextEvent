@@ -1,12 +1,14 @@
 package com.is3.eventmanager.service;
 
 import com.is3.eventmanager.dto.RegisterRequest;
+import com.is3.eventmanager.dto.LoginRequest;
 import com.is3.eventmanager.entity.User;
 import com.is3.eventmanager.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -33,5 +35,19 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
 
         userRepository.save(user);
+    }
+
+    public boolean login(LoginRequest request) {
+      
+      Optional<User> user = userRepository.findByEmail(request.getEmail());
+      
+      if (user.isEmpty()){
+        return false;
+      }
+
+      return passwordEncoder.matches(
+        request.getPassword(),
+        user.get().getPasswordHash()
+      );
     }
 }

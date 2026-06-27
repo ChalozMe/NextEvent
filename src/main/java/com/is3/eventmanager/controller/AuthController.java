@@ -1,6 +1,7 @@
 package com.is3.eventmanager.controller;
 
 import com.is3.eventmanager.dto.RegisterRequest;
+import com.is3.eventmanager.dto.LoginRequest;
 import com.is3.eventmanager.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,4 +24,15 @@ public class AuthController {
 
         return ResponseEntity.ok("User registered");
     }
+    
+    @PostMapping("/login")
+    public String login(@RequestBody LoginRequest request) {
+
+    if (authService.login(request)) {
+        return "Login successful";
+    }
+
+    return "Invalid credentials";
+}
+
 }
