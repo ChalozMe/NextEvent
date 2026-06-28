@@ -98,6 +98,7 @@ export interface VenueReview {
 // ===== Guest Types =====
 export type RSVPStatus = 'confirmado' | 'pendiente' | 'rechazado';
 export type GuestGroup = 'familia' | 'amigos' | 'trabajo' | 'otros';
+export type EntryStatus = 'ingresado' | 'pendiente' | 'no_asistira';
 
 export interface Guest {
   id: string;
@@ -111,6 +112,8 @@ export interface Guest {
   table?: string;
   plusOne?: boolean;
   notes?: string;
+  entryStatus?: EntryStatus; // estado de ingreso en puerta
+  entryTime?: string;        // hora de ingreso en puerta
 }
 
 // Resumen del evento al que pertenece la lista de invitados
