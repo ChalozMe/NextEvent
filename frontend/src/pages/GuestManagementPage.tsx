@@ -378,8 +378,8 @@ function GuestManagementPage() {
                   <td>
                     <button
                       className="action-dots"
-                      title="Acciones"
-                      onClick={() => handleDelete(guest.id)}
+                      title="Opciones"
+                      onClick={() => flash('Acciones de invitado en desarrollo.')}
                       type="button"
                     >
                       •••
@@ -577,46 +577,48 @@ function GuestManagementPage() {
               <button className="modal__close" onClick={() => setIsPrintPreviewOpen(false)} type="button">✕</button>
             </div>
             
-            <div className="modal__body print-container">
-              {/* Contenido a imprimir */}
-              <div className="print-header">
-                <h1>{MOCK_EVENT.name} - Lista de Acceso</h1>
-                <p>📍 {MOCK_EVENT.location} | 📅 {MOCK_EVENT.date}</p>
-                <p>Total confirmados: {guests.filter(g => g.rsvpStatus === 'confirmado').length}</p>
-              </div>
+            <div className="modal__body" style={{ background: '#f4f4f5', padding: '2rem' }}>
+              <div className="print-container">
+                {/* Contenido a imprimir */}
+                <div className="print-header">
+                  <h1>{MOCK_EVENT.name} - Lista de Acceso</h1>
+                  <p>📍 {MOCK_EVENT.location} | 📅 {MOCK_EVENT.date}</p>
+                  <p>Total confirmados: {guests.filter(g => g.rsvpStatus === 'confirmado').length}</p>
+                </div>
 
-              <table className="print-table">
-                <thead>
-                  <tr>
-                    <th>✓</th>
-                    <th>Invitado</th>
-                    <th>Grupo</th>
-                    <th>Mesa</th>
-                    <th>Firma / Notas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {guests.filter(g => g.rsvpStatus === 'confirmado').map((guest, idx) => (
-                    <tr key={guest.id}>
-                      <td className="print-table__check"></td>
-                      <td>
-                        <strong>{guest.name}</strong><br />
-                        <small>{guest.email}</small>
-                      </td>
-                      <td>{guest.group || '-'}</td>
-                      <td>{guest.table || '-'}</td>
-                      <td className="print-table__notes"></td>
-                    </tr>
-                  ))}
-                  {guests.filter(g => g.rsvpStatus === 'confirmado').length === 0 && (
+                <table className="print-table">
+                  <thead>
                     <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
-                        No hay invitados confirmados aún.
-                      </td>
+                      <th>✓</th>
+                      <th>Invitado</th>
+                      <th>Grupo</th>
+                      <th>Mesa</th>
+                      <th>Firma / Notas</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {guests.filter(g => g.rsvpStatus === 'confirmado').map((guest, idx) => (
+                      <tr key={guest.id}>
+                        <td className="print-table__check"></td>
+                        <td>
+                          <strong>{guest.name}</strong><br />
+                          <small>{guest.email}</small>
+                        </td>
+                        <td>{guest.group || '-'}</td>
+                        <td>{guest.table || '-'}</td>
+                        <td className="print-table__notes"></td>
+                      </tr>
+                    ))}
+                    {guests.filter(g => g.rsvpStatus === 'confirmado').length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                          No hay invitados confirmados aún.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div className="modal__footer" style={{ justifyContent: 'space-between' }}>
