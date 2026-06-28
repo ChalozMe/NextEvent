@@ -805,3 +805,123 @@
 
   .pagination { flex-direction: column; gap: 0.75rem; }
 }
+
+/* ─── Modal Lista de Puerta & Imprimir ──────────────────── */
+.btn-print-door {
+  background: white;
+  color: #1E293B;
+  border: 1px solid #CBD5E1;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.btn-print-door:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+}
+
+.modal--print {
+  max-width: 800px;
+  width: 95%;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal--print .modal__body {
+  flex: 1;
+  overflow-y: auto;
+  background: #f4f4f5;
+  padding: 2rem;
+}
+
+.print-container {
+  background: white;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  margin: 0 auto;
+  max-width: 21cm; /* A4 width */
+  min-height: 29.7cm; /* A4 height */
+}
+
+.print-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #1E293B;
+  padding-bottom: 1rem;
+}
+.print-header h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  color: #1E293B;
+}
+.print-header p {
+  margin: 0.2rem 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.print-table th, .print-table td {
+  border: 1px solid #CBD5E1;
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.85rem;
+}
+.print-table th {
+  background-color: #F8FAFC;
+  font-weight: 600;
+  color: #1E293B;
+}
+.print-table__check {
+  width: 40px;
+}
+.print-table__notes {
+  width: 150px;
+}
+
+/* @media print styles to only print the modal content */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .modal--print, .modal--print * {
+    visibility: visible;
+  }
+  .modal--print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    max-width: none;
+    box-shadow: none;
+    border: none;
+    margin: 0;
+  }
+  .modal__header, .modal__footer {
+    display: none !important; /* Hide modal close/print buttons when printing */
+  }
+  .print-container {
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    width: 100%;
+    max-width: 100%;
+  }
+  .print-table th {
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+    background-color: #F8FAFC !important;
+  }
+}

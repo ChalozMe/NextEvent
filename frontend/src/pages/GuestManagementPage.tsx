@@ -87,7 +87,10 @@ function GuestManagementPage() {
   // Importación masiva
   const [bulkRaw, setBulkRaw] = useState('');
 
-  // Feedback
+  // Estado para impresión de lista de puerta
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
+
+  // Parseo de bulkRawck
   const [alertMsg,  setAlertMsg]  = useState('');
   const [showAlert, setShowAlert] = useState(false);
 
@@ -312,6 +315,9 @@ function GuestManagementPage() {
         </div>
 
         <div className="guests__toolbar-right">
+          <button className="btn-print-door" onClick={() => setIsPrintPreviewOpen(true)} type="button">
+            🖨️ Lista de Puerta
+          </button>
           <button className="btn-import" onClick={() => setIsBulkOpen(true)} type="button">
             ↑ Importar lista
           </button>
@@ -557,6 +563,72 @@ function GuestManagementPage() {
                 disabled={pendingCount === 0} type="button">
                 Enviar a {pendingCount} invitado{pendingCount !== 1 ? 's' : ''}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Imprimir Lista de Puerta ──────────── */}
+      {isPrintPreviewOpen && (
+        <div className="modal-overlay" onClick={() => setIsPrintPreviewOpen(false)}>
+          <div className="modal modal--print animate-scale-in" onClick={e => e.stopPropagation()}>
+            <div className="modal__header">
+              <h2 className="modal__title">🖨️ Vista previa — Lista de Puerta</h2>
+              <button className="modal__close" onClick={() => setIsPrintPreviewOpen(false)} type="button">✕</button>
+            </div>
+            
+            <div className="modal__body print-container">
+              {/* Contenido a imprimir */}
+              <div className="print-header">
+                <h1>{MOCK_EVENT.name} - Lista de Acceso</h1>
+                <p>📍 {MOCK_EVENT.location} | 📅 {MOCK_EVENT.date}</p>
+                <p>Total confirmados: {guests.filter(g => g.rsvpStatus === 'confirmado').length}</p>
+              </div>
+
+              <table className="print-table">
+                <thead>
+                  <tr>
+                    <th>✓</th>
+                    <th>Invitado</th>
+                    <th>Grupo</th>
+                    <th>Mesa</th>
+                    <th>Firma / Notas</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {guests.filter(g => g.rsvpStatus === 'confirmado').map((guest, idx) => (
+                    <tr key={guest.id}>
+                      <td className="print-table__check"></td>
+                      <td>
+                        <strong>{guest.name}</strong><br />
+                        <small>{guest.email}</small>
+                      </td>
+                      <td>{guest.group || '-'}</td>
+                      <td>{guest.table || '-'}</td>
+                      <td className="print-table__notes"></td>
+                    </tr>
+                  ))}
+                  {guests.filter(g => g.rsvpStatus === 'confirmado').length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                        No hay invitados confirmados aún.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="modal__footer" style={{ justifyContent: 'space-between' }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748B' }}>Solo se muestran invitados "Confirmados".</p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button className="modal__btn modal__btn--cancel" onClick={() => setIsPrintPreviewOpen(false)} type="button">
+                  Cerrar
+                </button>
+                <button className="modal__btn modal__btn--submit" onClick={() => window.print()} type="button">
+                  🖨️ Imprimir Lista
+                </button>
+              </div>
             </div>
           </div>
         </div>
