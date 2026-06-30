@@ -9,7 +9,7 @@ const navItems = [
   { to: '/chronogram', icon: '✨', label: 'Cronograma IA', enabled: true },
   { to: '/venues', icon: '📍', label: 'Locales', enabled: true },
   { to: '/guests', icon: '👥', label: 'Invitados RSVP', enabled: true },
-  { to: '/gallery', icon: '🖼️', label: 'Galería', enabled: false },
+  { to: '/gallery', icon: '🖼️', label: 'Galería', enabled: true },
   { to: '/settings', icon: '⚙️', label: 'Configuración', enabled: false },
 ];
 
@@ -45,6 +45,10 @@ const Sidebar = () => {
     aiTitle = '✨ Gestión inteligente';
     aiDesc = 'La IA puede sugerirte la distribución de mesas y detectar invitados sin confirmar.';
     aiBtn = 'Optimizar mesas';
+  } else if (location.pathname === '/gallery') {
+    aiTitle = '🖼️ Álbum compartido';
+    aiDesc = 'Los invitados pueden subir fotos del evento. Todas las fotos están visibles para todos los invitados.';
+    aiBtn = '▶ Ver cómo funciona';
   }
 
   return (
