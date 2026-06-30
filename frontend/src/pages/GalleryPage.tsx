@@ -101,8 +101,8 @@ function GalleryPage() {
       <div className="gallery__header">
         <div className="gallery__header-icon">🖼️</div>
         <div className="gallery__header-text">
-          <h1 className="gallery__title">Galería del evento</h1>
-          <p className="gallery__subtitle">Fotos compartidas por los invitados del evento.</p>
+          <h1 className="gallery__title">Galería: {MOCK_EVENT.name}</h1>
+          <p className="gallery__subtitle">Todas las fotos aquí pertenecen a este evento. Compartidas por los invitados.</p>
         </div>
       </div>
 
