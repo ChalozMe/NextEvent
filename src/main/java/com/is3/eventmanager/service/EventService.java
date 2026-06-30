@@ -4,6 +4,7 @@ import com.is3.eventmanager.dto.EventRequest;
 import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.repository.EventRepository;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class EventService {
@@ -24,5 +25,11 @@ public class EventService {
 
         eventRepository.save(event);
     }
+
+
+    public List<Event> getAllEvents() {
+        return eventRepository.findAll();
+    }
+
 
 }
