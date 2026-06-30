@@ -1,7 +1,9 @@
 package com.is3.eventmanager.controller;
 
 import com.is3.eventmanager.dto.EventRequest;
+import com.is3.eventmanager.dto.JoinEventRequest;
 import com.is3.eventmanager.entity.Event;
+import com.is3.eventmanager.entity.UserEvent;
 import com.is3.eventmanager.service.EventService;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -27,5 +29,19 @@ public class EventController {
     @GetMapping
     public List<Event> getAllEvents() {
     return eventService.getAllEvents();
+    }
+
+    @PostMapping("/{eventId}/join")
+    public String joinEvent(
+        @PathVariable Long eventId,
+        @RequestBody JoinEventRequest request) {
+
+    eventService.joinEvent(eventId, request.getUserId());
+    return "User registered";
+    }
+
+    @GetMapping("/{eventId}/participants")
+    public List<UserEvent> getParticipants(@PathVariable Long eventId) {
+      return eventService.getParticipants(eventId);
     }
 }
