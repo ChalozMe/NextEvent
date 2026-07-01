@@ -12,6 +12,7 @@ import GuestManagementPage from './pages/GuestManagementPage';
 import RSVPConfirmPage from './pages/RSVPConfirmPage';
 import RSVPResponsePage from './pages/RSVPResponsePage';
 import GalleryPage from './pages/GalleryPage';
+import RatingsPage from './pages/RatingsPage';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path="/venues/:id" element={<VenueDetailPage />} />
             <Route path="/guests" element={<GuestManagementPage />} />
             <Route path="/gallery" element={<GalleryPage />} />
+            <Route path="/ratings" element={<RatingsPage />} />
           </Route>
 
           {/* Catch-all */}

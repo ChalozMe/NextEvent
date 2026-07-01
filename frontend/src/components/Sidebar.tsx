@@ -10,6 +10,7 @@ const navItems = [
   { to: '/venues', icon: '📍', label: 'Locales', enabled: true },
   { to: '/guests', icon: '👥', label: 'Invitados RSVP', enabled: true },
   { to: '/gallery', icon: '🖼️', label: 'Galería', enabled: true },
+  { to: '/ratings', icon: '⭐', label: 'Calificar servicios', enabled: true },
   { to: '/settings', icon: '⚙️', label: 'Configuración', enabled: false },
 ];
 
@@ -49,6 +50,10 @@ const Sidebar = () => {
     aiTitle = '🖼️ Álbum compartido';
     aiDesc = 'Los invitados pueden subir fotos del evento. Todas las fotos están visibles para todos los invitados.';
     aiBtn = '▶ Ver cómo funciona';
+  } else if (location.pathname === '/ratings') {
+    aiTitle = '⭐ Sistema de valoraciones';
+    aiDesc = 'Tu opinión ayuda a otros invitados a tomar mejores decisiones y a los proveedores a seguir mejorando.';
+    aiBtn = '❔ ¿Por qué calificar?';
   }
 
   return (
