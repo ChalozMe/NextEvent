@@ -11,7 +11,7 @@ const navItems = [
   { to: '/guests', icon: '👥', label: 'Invitados RSVP', enabled: true },
   { to: '/gallery', icon: '🖼️', label: 'Galería', enabled: true },
   { to: '/ratings', icon: '⭐', label: 'Calificar servicios', enabled: true },
-  { to: '/settings', icon: '⚙️', label: 'Configuración', enabled: false },
+  { to: '/settings', icon: '⚙️', label: 'Configuración', enabled: true },
 ];
 
 const Sidebar = () => {
@@ -54,6 +54,10 @@ const Sidebar = () => {
     aiTitle = '⭐ Sistema de valoraciones';
     aiDesc = 'Tu opinión ayuda a otros invitados a tomar mejores decisiones y a los proveedores a seguir mejorando.';
     aiBtn = '❔ ¿Por qué calificar?';
+  } else if (location.pathname === '/settings') {
+    aiTitle = '⚙️ Configuración asistida';
+    aiDesc = 'Nuestra IA puede ajustar automáticamente tus preferencias basándose en tu tipo de eventos.';
+    aiBtn = 'Ajuste inteligente';
   }
 
   return (
