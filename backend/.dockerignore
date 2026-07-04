@@ -1,0 +1,15 @@
+target/
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Environment / secrets
+.env
+.env.*
+
+# Logs
+*.log
