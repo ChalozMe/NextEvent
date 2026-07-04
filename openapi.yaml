@@ -1,0 +1,1229 @@
+openapi: 3.0.3
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  NextEvent API — Contrato OpenAPI
+#  Versión: 1.0.0
+#  Proyecto: Ingeniería de Software III — UNSA 2026
+#
+#  Este archivo es el "contrato" entre Frontend (React/TS) y Backend (Java MVC).
+#  Ningún lado puede cambiar la interfaz sin actualizar este documento primero.
+# ═══════════════════════════════════════════════════════════════════════════
+
+info:
+  title: NextEvent API
+  version: 1.0.0
+  description: |
+    API REST del sistema NextEvent — plataforma de gestión inteligente de eventos
+    (Bodas, Quinceañeros, Eventos Empresariales).
+
+    ## Autenticación
+    La mayoría de endpoints requieren un token JWT en el header:
+    ```
+    Authorization: Bearer <token>
+    ```
+    El token se obtiene en `POST /auth/login`.
+
+    ## Endpoints públicos (sin autenticación requerida)
+    - `POST /auth/login`
+    - `POST /auth/register`
+    - `GET  /rsvp/{token}`
+
+    ## Reglas de negocio referenciadas
+    - **RN01** Anti-colisión de locales
+    - **RN02** Caducidad de enlaces RSVP (48h antes del evento)
+    - **RN03** Solo calificar/subir fotos si el evento ya ocurrió
+    - **RN04** Fecha del evento siempre futura
+    - **RN05** Solo el propietario puede gestionar su evento
+    - **RN06** Aforo del local >= aforo del evento
+    - **RN07** No más invitados que el aforo del evento
+    - **RN08** Correos únicos por evento
+    - **RN09** Tipos fijos: Boda, Quinceañero, Empresarial
+    - **RN10** Decisión RSVP es inmutable una vez tomada
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Servidor de desarrollo local
+
+# ─── Tags (agrupan endpoints por módulo) ─────────────────────────────────
+tags:
+  - name: Auth
+    description: Autenticación y registro → US-01, US-08
+  - name: Events
+    description: Gestión de eventos e IA → US-02, US-03, US-09, US-12, US-13
+  - name: Tasks
+    description: Tareas del cronograma → US-10
+  - name: Venues
+    description: Catálogo y disponibilidad de locales → US-04, US-14
+  - name: Guests
+    description: Sistema RSVP e invitados → US-05, US-06, US-07
+  - name: Photos
+    description: Galería de fotos del evento → US-15
+  - name: Ratings
+    description: Calificación de locales → US-16
+
+# ─── Seguridad global (aplica a todos excepto los marcados con security: []) ──
+security:
+  - bearerAuth: []
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  PATHS — Endpoints del sistema
+# ═══════════════════════════════════════════════════════════════════════════
+paths:
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │  EPIC-01: AUTENTICACIÓN                                             │
+  # └─────────────────────────────────────────────────────────────────────┘
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: US-08 — Registrar nueva cuenta de organizador
+      description: |
+        Crea una cuenta de usuario. La contraseña se encripta con BCrypt (RNF03).
+        El correo debe ser único en el sistema.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              nombre: "Juan Pérez"
+              correo: "juan@email.com"
+              contrasenha: "miPassword123"
+      responses:
+        '201':
+          description: Cuenta creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Cuenta creada. Por favor inicia sesión."
+        '409':
+          description: El correo ya está registrado en el sistema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "El correo juan@email.com ya está en uso."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: US-01 — Iniciar sesión
+      description: |
+        Autentica al usuario y retorna un token JWT.
+        La comparación de contraseña usa BCrypt (RNF03).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              correo: "juan@email.com"
+              contrasenha: "miPassword123"
+      responses:
+        '200':
+          description: Login exitoso — retorna token JWT y datos del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciales incorrectas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Correo o contraseña incorrectos."
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │  EPIC-02: GESTIÓN DE EVENTOS                                        │
+  # └─────────────────────────────────────────────────────────────────────┘
+
+  /events:
+    get:
+      tags: [Events]
+      summary: Listar todos los eventos del organizador autenticado
+      responses:
+        '200':
+          description: Lista de eventos del organizador
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Events]
+      summary: US-02 + US-03 — Crear evento (dispara generación de cronograma por IA)
+      description: |
+        Crea el evento y automáticamente llama al servicio de IA para generar
+        el cronograma de tareas. Las tareas generadas se guardan en la BD.
+
+        **Reglas aplicadas:**
+        - RN04: La fecha debe ser futura (HTTP 400 si no lo es)
+        - RN09: El tipo debe ser Boda, Quinceañero o Empresarial
+        - RNF04: La IA debe responder en menos de 10 segundos (HTTP 504 si excede)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+            example:
+              tipo: "Boda"
+              fecha_evento: "2027-03-15"
+              aforo: 150
+              presupuesto: 25000.00
+      responses:
+        '201':
+          description: Evento creado con cronograma de tareas generado por IA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventWithTasks'
+        '400':
+          description: Fecha en el pasado o tipo de evento inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "La fecha del evento debe ser futura (RN04)."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '504':
+          description: Timeout al contactar el servicio de IA (excedió 10 segundos)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "El servicio de IA no respondió en el tiempo esperado. Intenta nuevamente."
+
+  /events/{id}:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+
+    get:
+      tags: [Events]
+      summary: Obtener detalle completo de un evento
+      responses:
+        '200':
+          description: Detalle del evento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Events]
+      summary: US-12 — Editar evento existente
+      description: |
+        Actualiza los campos del evento.
+
+        **Reglas aplicadas:**
+        - RN05: Solo el organizador propietario puede editar (HTTP 403 si no lo es)
+        - RN04: La nueva fecha debe ser futura (HTTP 400 si no lo es)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRequest'
+            example:
+              tipo: "Empresarial"
+              fecha_evento: "2027-06-20"
+              aforo: 200
+              presupuesto: 35000.00
+      responses:
+        '200':
+          description: Evento actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Events]
+      summary: US-13 — Eliminar evento
+      description: |
+        Elimina el evento y en cascada: tareas, invitados y reservas.
+
+        **Reglas aplicadas:**
+        - RN05: Solo el propietario puede eliminar (HTTP 403)
+        - No se puede eliminar un evento cuya fecha ya pasó (HTTP 409)
+      responses:
+        '204':
+          description: Evento eliminado exitosamente (sin contenido)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: El evento ya se realizó y no puede eliminarse
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "No se puede eliminar un evento que ya se realizó."
+
+  /events/{id}/summary:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+    get:
+      tags: [Events]
+      summary: US-09 — Dashboard del evento (métricas en tiempo real)
+      description: |
+        Retorna las métricas agregadas para el panel de control (RF02):
+        porcentaje de tareas completadas, invitados confirmados y cuenta regresiva.
+      responses:
+        '200':
+          description: Métricas del dashboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDashboard'
+              example:
+                total_tareas: 12
+                tareas_completadas: 4
+                porcentaje_completado: 33.3
+                total_invitados: 80
+                invitados_confirmados: 45
+                dias_restantes: 120
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │  TAREAS DEL CRONOGRAMA                                              │
+  # └─────────────────────────────────────────────────────────────────────┘
+
+  /events/{id}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+    get:
+      tags: [Tasks]
+      summary: Listar tareas del cronograma generado por IA
+      responses:
+        '200':
+          description: Lista de tareas del evento ordenadas por fecha límite
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+              example:
+                - id: 1
+                  titulo: "Reservar local del evento"
+                  fecha_limite: "2026-09-15"
+                  estado: "Completada"
+                - id: 2
+                  titulo: "Confirmar catering"
+                  fecha_limite: "2027-01-15"
+                  estado: "Pendiente"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /events/{id}/tasks/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID de la tarea a actualizar
+    put:
+      tags: [Tasks]
+      summary: US-10 — Actualizar estado o fecha límite de una tarea
+      description: |
+        Permite editar el estado o la fecha límite de una tarea del cronograma.
+
+        **Reglas aplicadas:**
+        - RN05: Solo el propietario del evento puede modificar sus tareas (HTTP 403)
+        - Estados válidos: Pendiente → En Progreso → Completada
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+            example:
+              estado: "En Progreso"
+              fecha_limite: "2026-12-01"
+      responses:
+        '200':
+          description: Tarea actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Estado inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Estado inválido. Valores permitidos: Pendiente, En Progreso, Completada."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │  EPIC-03: LOCALES (VENUES)                                          │
+  # └─────────────────────────────────────────────────────────────────────┘
+
+  /venues:
+    get:
+      tags: [Venues]
+      summary: US-04 — Buscar locales con filtro anti-colisión y capacidad
+      description: |
+        Lista los locales del sistema. Si se proveen `date` y `eventId`, aplica:
+
+        **Reglas aplicadas:**
+        - RN01 (Anti-colisión): excluye locales con reserva "Confirmada" en esa fecha
+        - RN06 (Capacidad): solo muestra locales con `aforo_maximo` >= aforo del evento
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Fecha para filtrar disponibilidad (YYYY-MM-DD)
+          example: "2027-03-15"
+        - name: eventId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: ID del evento para aplicar filtro de capacidad (RN06)
+          example: 5
+      responses:
+        '200':
+          description: Lista de locales (filtrada según parámetros)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VenueSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /venues/{venueId}:
+    parameters:
+      - name: venueId
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID del local
+    get:
+      tags: [Venues]
+      summary: Obtener detalle de un local específico
+      responses:
+        '200':
+          description: Detalle completo del local incluyendo descripción y rating
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /venues/{venueId}/gallery:
+    parameters:
+      - name: venueId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags: [Venues]
+      summary: US-14 — Ver galería de fotos reales de un local
+      description: |
+        Retorna las fotografías de eventos **ya realizados** en este local.
+
+        **Reglas aplicadas:**
+        - RN03: Solo se muestran fotos de eventos cuya `fecha_evento` < fecha actual.
+      responses:
+        '200':
+          description: Lista de fotos del local ordenadas por fecha de subida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Photo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /venues/{venueId}/ratings:
+    parameters:
+      - name: venueId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags: [Ratings]
+      summary: US-16 — Calificar un local (solo si el evento ya ocurrió)
+      description: |
+        Permite al organizador dar entre 1 y 5 estrellas al local.
+        El rating promedio del local se recalcula automáticamente.
+
+        **Reglas aplicadas:**
+        - RN03: El evento asociado debe haber ya ocurrido (HTTP 403 si no)
+        - Solo una calificación por usuario por local (HTTP 409 si ya existe)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRatingRequest'
+            example:
+              id_evento: 5
+              estrellas: 4
+              resena: "Excelente ambiente, personal muy atento."
+      responses:
+        '201':
+          description: Calificación registrada y rating promedio actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingResponse'
+              example:
+                message: "Calificación registrada exitosamente."
+                nuevo_rating_promedio: 4.3
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: El evento aún no se ha realizado o no está vinculado a este local (RN03)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Solo puedes calificar un local si tu evento ya se realizó allí (RN03)."
+        '409':
+          description: El usuario ya calificó este local anteriormente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Ya has calificado este local. Solo se permite una calificación por usuario."
+
+  # ┌─────────────────────────────────────────────────────────────────────┐
+  # │  EPIC-04: SISTEMA RSVP E INVITADOS                                  │
+  # └─────────────────────────────────────────────────────────────────────┘
+
+  /events/{id}/guests:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+
+    get:
+      tags: [Guests]
+      summary: US-07 — Listar invitados (Lista de Puerta con filtro por estado)
+      description: |
+        Retorna la lista de invitados del evento.
+        Usar `?status=Confirmado` para obtener la Lista de Puerta (US-07).
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [Confirmado, Rechazado, Pendiente]
+          description: Filtrar por estado de asistencia
+          example: "Confirmado"
+      responses:
+        '200':
+          description: Lista de invitados (filtrada o completa)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Guest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags: [Guests]
+      summary: US-05 — Registrar invitados y enviar invitaciones RSVP por email
+      description: |
+        Registra correos como invitados y envía invitaciones automáticamente
+        por SMTP con tokens UUID únicos ("Asistiré" / "No Asistiré").
+
+        **Reglas aplicadas:**
+        - RN07: No se pueden agregar más invitados que el aforo del evento (HTTP 400)
+        - RN08: Correos duplicados en el mismo evento son ignorados sin error fatal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddGuestsRequest'
+            example:
+              correos:
+                - "maria@email.com"
+                - "pedro@email.com"
+                - "lucia@email.com"
+      responses:
+        '201':
+          description: Invitados registrados e invitaciones enviadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddGuestsResponse'
+              example:
+                registrados: 3
+                duplicados_ignorados: 1
+                correos_enviados: 3
+                message: "Invitaciones enviadas exitosamente."
+        '400':
+          description: Se superó el aforo máximo del evento (RN07)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Capacidad máxima alcanzada. El evento tiene aforo para 150 personas (RN07)."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /rsvp/{token}:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Token UUID único enviado al invitado en el correo de invitación
+        example: "550e8400-e29b-41d4-a716-446655440000"
+    get:
+      tags: [Guests]
+      summary: US-06 — Confirmar o rechazar asistencia (endpoint PÚBLICO)
+      description: |
+        Endpoint sin autenticación. El invitado llega aquí desde el link de su correo.
+
+        **Comportamiento según reglas:**
+        - Token válido y enlace vigente → actualiza estado del invitado
+        - Faltan < 48h para el evento → HTTP 410, marca como "No asiste" (RN02)
+        - El invitado ya respondió → HTTP 200 con estado actual en solo lectura (RN10)
+        - Token inválido o no existe → HTTP 404
+      security: []
+      parameters:
+        - name: respuesta
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [asistire, no-asistire]
+          description: Decisión del invitado
+          example: "asistire"
+      responses:
+        '200':
+          description: Respuesta registrada (o ya respondida anteriormente — ver campo `ya_respondido`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RsvpResponse'
+              example:
+                message: "¡Confirmación registrada! Te esperamos en el evento."
+                estado: "Confirmado"
+                ya_respondido: false
+        '404':
+          description: Token inválido o no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "El enlace de invitación no es válido."
+        '410':
+          description: Enlace caducado — faltan menos de 48 horas para el evento (RN02)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Este enlace ha caducado. El evento ocurre en menos de 48 horas."
+
+  /events/{id}/photos:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+    post:
+      tags: [Photos]
+      summary: US-15 — Subir foto a la galería del local del evento
+      description: |
+        Sube una fotografía asociada al evento (y por ende al local donde se realizó).
+
+        **Reglas aplicadas:**
+        - RN03: El evento debe haber ya ocurrido (HTTP 403 si es futuro)
+        - Formatos: JPG o PNG. Tamaño máximo: 5 MB por archivo.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [foto]
+              properties:
+                foto:
+                  type: string
+                  format: binary
+                  description: Archivo de imagen (JPG o PNG, máximo 5 MB)
+                descripcion:
+                  type: string
+                  maxLength: 300
+                  nullable: true
+                  description: Descripción opcional de la foto
+      responses:
+        '201':
+          description: Foto subida exitosamente y disponible en la galería del local
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          description: Formato de archivo inválido o tamaño excedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Solo se aceptan archivos JPG o PNG de máximo 5 MB."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: El evento aún no se ha realizado (RN03)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Solo puedes subir fotos de eventos que ya se realizaron (RN03)."
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  COMPONENTS — Piezas reutilizables del contrato
+# ═══════════════════════════════════════════════════════════════════════════
+components:
+
+  # ─── Esquema de autenticación ─────────────────────────────────────────
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT obtenido en POST /auth/login.
+        Enviar en el header: `Authorization: Bearer <token>`
+
+  # ─── Parámetros reutilizables ─────────────────────────────────────────
+  parameters:
+    EventId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: ID único del evento
+      example: 5
+
+  # ─── Respuestas de error reutilizables ────────────────────────────────
+  responses:
+    Unauthorized:
+      description: Token JWT ausente, expirado o inválido (HTTP 401)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Token de autenticación requerido o inválido."
+
+    Forbidden:
+      description: El usuario autenticado no tiene permisos sobre este recurso (HTTP 403 — RN05)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "No tienes permiso para acceder a este recurso (RN05)."
+
+    NotFound:
+      description: El recurso solicitado no existe (HTTP 404)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "El recurso solicitado no existe."
+
+    BadRequest:
+      description: Datos de entrada inválidos o incompletos (HTTP 400)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Los datos enviados no son válidos."
+
+  # ─── Schemas (modelos de datos) ───────────────────────────────────────
+  schemas:
+
+    # ══ AUTH ══════════════════════════════════════════════════════════════
+    RegisterRequest:
+      type: object
+      required: [nombre, correo, contrasenha]
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+          example: "Juan Pérez"
+        correo:
+          type: string
+          format: email
+          maxLength: 150
+          example: "juan@email.com"
+        contrasenha:
+          type: string
+          minLength: 8
+          maxLength: 255
+          description: Se almacenará encriptada con BCrypt — nunca en texto plano (RNF03)
+          example: "miPassword123"
+
+    LoginRequest:
+      type: object
+      required: [correo, contrasenha]
+      properties:
+        correo:
+          type: string
+          format: email
+          example: "juan@email.com"
+        contrasenha:
+          type: string
+          example: "miPassword123"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT para incluir en el header Authorization de las siguientes peticiones
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        usuario:
+          $ref: '#/components/schemas/UserInfo'
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          example: "Juan Pérez"
+        correo:
+          type: string
+          example: "juan@email.com"
+
+    # ══ EVENTS ════════════════════════════════════════════════════════════
+    CreateEventRequest:
+      type: object
+      required: [tipo, fecha_evento, aforo, presupuesto]
+      properties:
+        tipo:
+          type: string
+          enum: [Boda, Quinceañero, Empresarial]
+          description: Tipo de evento — valores fijos (RN09)
+          example: "Boda"
+        fecha_evento:
+          type: string
+          format: date
+          description: Fecha del evento. Debe ser estrictamente futura (RN04)
+          example: "2027-03-15"
+        aforo:
+          type: integer
+          minimum: 1
+          description: Número máximo de invitados planificado
+          example: 150
+        presupuesto:
+          type: number
+          format: double
+          minimum: 0
+          description: Presupuesto estimado
+          example: 25000.00
+
+    UpdateEventRequest:
+      type: object
+      description: Todos los campos son opcionales — solo se actualizan los enviados
+      properties:
+        tipo:
+          type: string
+          enum: [Boda, Quinceañero, Empresarial]
+        fecha_evento:
+          type: string
+          format: date
+          description: Debe ser futura (RN04)
+        aforo:
+          type: integer
+          minimum: 1
+        presupuesto:
+          type: number
+          format: double
+
+    EventSummary:
+      type: object
+      properties:
+        id_evento:
+          type: integer
+          example: 5
+        tipo:
+          type: string
+          example: "Boda"
+        fecha_evento:
+          type: string
+          format: date
+          example: "2027-03-15"
+        aforo:
+          type: integer
+          example: 150
+        presupuesto:
+          type: number
+          example: 25000.00
+        dias_restantes:
+          type: integer
+          description: Días que faltan para la fecha del evento
+          example: 280
+
+    EventDetail:
+      allOf:
+        - $ref: '#/components/schemas/EventSummary'
+        - type: object
+          properties:
+            total_tareas:
+              type: integer
+              example: 12
+            tareas_completadas:
+              type: integer
+              example: 4
+            total_invitados:
+              type: integer
+              example: 80
+            invitados_confirmados:
+              type: integer
+              example: 45
+
+    EventWithTasks:
+      allOf:
+        - $ref: '#/components/schemas/EventDetail'
+        - type: object
+          properties:
+            tareas:
+              type: array
+              description: Cronograma de tareas generado por la IA al crear el evento
+              items:
+                $ref: '#/components/schemas/Task'
+
+    EventDashboard:
+      type: object
+      properties:
+        total_tareas:
+          type: integer
+          example: 12
+        tareas_completadas:
+          type: integer
+          example: 4
+        porcentaje_completado:
+          type: number
+          format: float
+          description: (tareas_completadas / total_tareas) * 100
+          example: 33.3
+        total_invitados:
+          type: integer
+          example: 80
+        invitados_confirmados:
+          type: integer
+          example: 45
+        dias_restantes:
+          type: integer
+          example: 120
+
+    # ══ TASKS ═════════════════════════════════════════════════════════════
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        id_evento:
+          type: integer
+          example: 5
+        titulo:
+          type: string
+          example: "Reservar local del evento"
+        descripcion:
+          type: string
+          nullable: true
+          example: "Confirmar y pagar la reserva del local seleccionado"
+        fecha_limite:
+          type: string
+          format: date
+          example: "2026-09-15"
+        estado:
+          type: string
+          enum: [Pendiente, En Progreso, Completada]
+          example: "Pendiente"
+
+    UpdateTaskRequest:
+      type: object
+      description: Al menos uno de los dos campos debe enviarse
+      properties:
+        estado:
+          type: string
+          enum: [Pendiente, En Progreso, Completada]
+          example: "En Progreso"
+        fecha_limite:
+          type: string
+          format: date
+          example: "2026-12-01"
+
+    # ══ VENUES ════════════════════════════════════════════════════════════
+    VenueSummary:
+      type: object
+      properties:
+        id_local:
+          type: integer
+          example: 3
+        nombre:
+          type: string
+          example: "Salón Cristal"
+        direccion:
+          type: string
+          example: "Av. Ejercito 450, Arequipa"
+        aforo_maximo:
+          type: integer
+          example: 300
+        precio_referencial:
+          type: number
+          format: double
+          example: 5000.00
+        rating_promedio:
+          type: number
+          format: float
+          minimum: 1.0
+          maximum: 5.0
+          nullable: true
+          description: Promedio de calificaciones. Null si no tiene calificaciones aún.
+          example: 4.2
+        disponible:
+          type: boolean
+          description: true si está libre para la fecha consultada (aplicando RN01)
+          example: true
+
+    VenueDetail:
+      allOf:
+        - $ref: '#/components/schemas/VenueSummary'
+        - type: object
+          properties:
+            descripcion:
+              type: string
+              example: "Amplio salón con jardín exterior, estacionamiento y catering incluido."
+            total_calificaciones:
+              type: integer
+              example: 15
+
+    # ══ GUESTS ════════════════════════════════════════════════════════════
+    Guest:
+      type: object
+      properties:
+        id_invitado:
+          type: integer
+          example: 10
+        correo:
+          type: string
+          format: email
+          example: "maria@email.com"
+        nombre:
+          type: string
+          nullable: true
+          description: Nombre del invitado (puede ser nulo si solo se registró el correo)
+          example: "María López"
+        estado:
+          type: string
+          enum: [Pendiente, Confirmado, Rechazado]
+          example: "Confirmado"
+
+    AddGuestsRequest:
+      type: object
+      required: [correos]
+      properties:
+        correos:
+          type: array
+          items:
+            type: string
+            format: email
+          minItems: 1
+          description: Lista de correos a invitar. Duplicados son ignorados (RN08).
+          example: ["maria@email.com", "pedro@email.com", "lucia@email.com"]
+
+    AddGuestsResponse:
+      type: object
+      properties:
+        registrados:
+          type: integer
+          description: Cantidad de invitados nuevos registrados
+          example: 3
+        duplicados_ignorados:
+          type: integer
+          description: Correos ignorados por ya existir en el evento (RN08)
+          example: 1
+        correos_enviados:
+          type: integer
+          description: Cantidad de correos de invitación enviados por SMTP
+          example: 3
+        message:
+          type: string
+          example: "Invitaciones enviadas exitosamente."
+
+    RsvpResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "¡Confirmación registrada! Te esperamos en el evento."
+        estado:
+          type: string
+          enum: [Confirmado, Rechazado]
+          example: "Confirmado"
+        ya_respondido:
+          type: boolean
+          description: true si el invitado ya había respondido antes. El estado es de solo lectura (RN10).
+          example: false
+
+    # ══ PHOTOS ════════════════════════════════════════════════════════════
+    Photo:
+      type: object
+      properties:
+        id_foto:
+          type: integer
+          example: 22
+        id_evento:
+          type: integer
+          example: 5
+        url:
+          type: string
+          description: URL relativa del archivo almacenado
+          example: "/uploads/eventos/abc123def.jpg"
+        descripcion:
+          type: string
+          nullable: true
+          example: "Decoración del salón principal"
+        fecha_subida:
+          type: string
+          format: date-time
+          example: "2027-03-16T14:30:00Z"
+
+    # ══ RATINGS ═══════════════════════════════════════════════════════════
+    CreateRatingRequest:
+      type: object
+      required: [id_evento, estrellas]
+      properties:
+        id_evento:
+          type: integer
+          description: ID del evento vinculado a este local (para validar RN03)
+          example: 5
+        estrellas:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        resena:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Reseña de texto opcional
+          example: "Excelente ambiente, personal muy atento."
+
+    RatingResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Calificación registrada exitosamente."
+        nuevo_rating_promedio:
+          type: number
+          format: float
+          description: Rating promedio del local recalculado tras esta calificación
+          example: 4.3
+
+    # ══ COMUNES ═══════════════════════════════════════════════════════════
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Mensaje descriptivo del error
+          example: "El recurso solicitado no existe."
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operación realizada exitosamente."
