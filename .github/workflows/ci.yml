@@ -90,7 +90,7 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm test -- --watchAll=false --passWithNoTests
+        run: npm test
 
       - name: Build
         run: npm run build
