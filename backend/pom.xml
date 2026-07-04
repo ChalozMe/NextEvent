@@ -121,6 +121,46 @@
             </configuration>
           </plugin>
 
+          <!-- Checkstyle: estilo y convenciones de código (modo advertencia por ahora) -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <version>3.6.0</version>
+            <configuration>
+              <configLocation>google_checks.xml</configLocation>
+              <failOnViolation>false</failOnViolation>
+              <violationSeverity>warning</violationSeverity>
+            </configuration>
+            <executions>
+              <execution>
+                <id>checkstyle-check</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- SpotBugs: detección de bugs reales por patrones estáticos (modo advertencia por ahora) -->
+          <plugin>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-maven-plugin</artifactId>
+            <version>4.9.4.0</version>
+            <configuration>
+              <failOnError>false</failOnError>
+            </configuration>
+            <executions>
+              <execution>
+                <id>spotbugs-check</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
         </plugins>
     </build>
 
