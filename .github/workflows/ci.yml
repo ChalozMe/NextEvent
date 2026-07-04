@@ -1,0 +1,96 @@
+name: CI — NextEvent
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ─────────────────────────────────────────
+  # Backend: Java / Spring Boot
+  # ─────────────────────────────────────────
+  backend:
+    name: Backend (Java)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: nextevent_test
+          POSTGRES_USER: nextevent
+          POSTGRES_PASSWORD: nextevent
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nextevent"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Build & test
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/nextevent_test
+          SPRING_DATASOURCE_USERNAME: nextevent
+          SPRING_DATASOURCE_PASSWORD: nextevent
+          JWT_SECRET: ci-secret-for-testing-only
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: mvn -B verify
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports/
+
+  # ─────────────────────────────────────────
+  # Frontend: React + TypeScript
+  # ─────────────────────────────────────────
+  frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --watchAll=false --passWithNoTests
+
+      - name: Build
+        run: npm run build
