@@ -121,6 +121,14 @@
             </configuration>
           </plugin>
 
+          <!--
+            Checkstyle y SpotBugs: NO están atados a ninguna fase del ciclo de
+            vida (sin <executions> con <phase>) a propósito. El job "backend"
+            de CI corre "mvn verify" y no debe re-ejecutar el análisis estático;
+            eso lo hace el job "code-quality" por separado, invocando los goals
+            explícitamente (mvn checkstyle:check / mvn spotbugs:check).
+          -->
+
           <!-- Checkstyle: estilo y convenciones de código (modo advertencia por ahora) -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -131,15 +139,6 @@
               <failOnViolation>false</failOnViolation>
               <violationSeverity>warning</violationSeverity>
             </configuration>
-            <executions>
-              <execution>
-                <id>checkstyle-check</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
 
           <!-- SpotBugs: detección de bugs reales por patrones estáticos (modo advertencia por ahora) -->
@@ -150,15 +149,6 @@
             <configuration>
               <failOnError>false</failOnError>
             </configuration>
-            <executions>
-              <execution>
-                <id>spotbugs-check</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
 
         </plugins>
