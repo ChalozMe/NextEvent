@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useCallback,
   type ReactNode,
 } from 'react';
@@ -22,24 +21,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem('nexevent_token');
+  const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('nexevent_user');
-    if (savedToken && savedUser) {
+    if (savedUser) {
       try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        return JSON.parse(savedUser);
       } catch {
         localStorage.removeItem('nexevent_token');
         localStorage.removeItem('nexevent_user');
       }
     }
-    setIsLoading(false);
-  }, []);
+    return null;
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('nexevent_token');
+  });
+  const isLoading = false;
 
   const login = useCallback(async (data: LoginRequest) => {
     const response = await authService.login(data);
@@ -84,6 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth debe usarse dentro de un AuthProvider');
