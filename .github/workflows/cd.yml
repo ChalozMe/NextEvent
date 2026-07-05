@@ -1,0 +1,59 @@
+name: CD — NextEvent
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push-image:
+    name: Build & push backend image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/nextevent-backend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nextevent-backend:latest
+
+  deploy-staging:
+    name: Deploy to staging
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Deploy image to staging
+        run: |
+          echo "Imagen a desplegar: ${{ secrets.DOCKERHUB_USERNAME }}/nextevent-backend:${{ github.sha }}"
+          echo "TODO: reemplazar por el paso real de deploy cuando exista infraestructura"
+          echo "(ej. ssh al servidor + 'docker compose pull && docker compose up -d',"
+          echo "o el CLI/acción del proveedor cloud elegido)."
+
+  deploy-production:
+    name: Deploy to production
+    needs: [build-and-push-image, deploy-staging]
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy image to production
+        run: |
+          echo "Imagen a desplegar: ${{ secrets.DOCKERHUB_USERNAME }}/nextevent-backend:${{ github.sha }}"
+          echo "TODO: reemplazar por el paso real de deploy cuando exista infraestructura."
