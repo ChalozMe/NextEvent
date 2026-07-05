@@ -1,0 +1,588 @@
+/* src/pages/VenueDetailPage.css */
+.venue-detail-container {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 3rem;
+  background-color: #F8FAFC;
+  min-height: 100%;
+  color: #0F172A;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Top Header */
+.venue-detail-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748B;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.back-link:hover {
+  color: #1E293B;
+}
+
+.venue-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-icon-circular {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #E2E8F0;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-icon-circular:hover {
+  background: #F1F5F9;
+  color: #1E293B;
+}
+
+.btn-reserve-header {
+  background-color: #6366F1;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+}
+.btn-reserve-header:hover {
+  background-color: #4F46E5;
+}
+
+/* Image Gallery */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  height: 400px;
+  margin-bottom: 2rem;
+}
+
+.gallery-main-wrapper {
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem 0 0 1rem;
+  overflow: hidden;
+}
+
+.gallery-main {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1rem;
+  min-height: 0; /* Fix grid blowout */
+}
+
+.gallery-side-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0; /* Fix grid blowout */
+}
+
+.gallery-side-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.gallery-side-img.top-right { border-radius: 0 1rem 0 0; }
+.gallery-side-img.bottom-right { border-radius: 0 0 1rem 0; }
+
+.gallery-count-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255,255,255,0.9);
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+/* Layout Content */
+.venue-detail-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+}
+
+/* Left Column */
+.venue-info-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.venue-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.venue-title-left h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #1E293B; /* Override global index.css white */
+}
+
+.verified-badge {
+  color: #6366F1;
+  font-size: 1.25rem;
+}
+
+.venue-title-left p {
+  color: #64748B;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.venue-rating-big {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.rating-score {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.rating-score .star { color: #F59E0B; }
+.rating-reviews {
+  font-size: 0.85rem;
+  color: #64748B;
+}
+
+.venue-description {
+  margin: 1.5rem 0;
+  font-size: 1rem;
+  color: #64748B;
+  line-height: 1.6;
+}
+
+/* Highlights Grid */
+.highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.highlight-box {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.highlight-icon {
+  width: 32px;
+  height: 32px;
+  background: #F5F3FF;
+  color: #6366F1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.highlight-text {
+  display: flex;
+  flex-direction: column;
+}
+.highlight-label {
+  font-size: 0.7rem;
+  color: #64748B;
+}
+.highlight-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+/* Tabs */
+.venue-tabs {
+  display: flex;
+  gap: 2rem;
+  border-bottom: 1px solid #E2E8F0;
+  margin-bottom: 2rem;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 1rem 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  position: relative;
+}
+.tab-btn.active {
+  color: #6366F1;
+}
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #6366F1;
+}
+
+/* Tab Content */
+.tab-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1E293B;
+}
+.tab-content p {
+  color: #64748B;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.includes-section h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1E293B;
+}
+
+.includes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.include-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  font-size: 0.95rem;
+}
+.check-icon {
+  color: #10B981;
+}
+
+/* Right Column (Sidebar) */
+.venue-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidebar-card {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+}
+
+/* Pricing Card */
+.pricing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+.pricing-label {
+  font-size: 0.9rem;
+  color: #64748B;
+}
+.pricing-suffix {
+  font-size: 0.8rem;
+  color: #94A3B8;
+}
+.pricing-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 0.5rem;
+}
+.pricing-note {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.btn-primary-full {
+  width: 100%;
+  background: #6366F1;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.875rem;
+  font-weight: 500;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  transition: background 0.2s;
+}
+.btn-primary-full:hover {
+  background: #4F46E5;
+}
+
+.secondary-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.btn-secondary-full {
+  flex: 1;
+  background: white;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  padding: 0.875rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-secondary-full:hover {
+  background: #F8FAFC;
+}
+.btn-icon-square {
+  width: 48px;
+  height: 48px;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-icon-square:hover {
+  background: #F1F5F9;
+  color: #1E293B;
+}
+
+/* Calendar Card */
+.calendar-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1E293B;
+}
+.calendar-month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.calendar-nav-btn {
+  background: none;
+  border: none;
+  color: #64748B;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.calendar-day-header {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94A3B8;
+  margin-bottom: 0.5rem;
+}
+.calendar-day {
+  font-size: 0.85rem;
+  color: #1E293B;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.calendar-day.other-month {
+  color: #CBD5E1;
+}
+.calendar-day.selected {
+  background: #6366F1;
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748B;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.legend-dot.disponible { background: #10B981; }
+.legend-dot.reservado { background: #EF4444; }
+.legend-dot.consulta { background: #F59E0B; }
+
+/* Reviews Card */
+.reviews-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.reviews-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1E293B;
+}
+.reviews-link {
+  font-size: 0.85rem;
+  color: #6366F1;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.review-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.review-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.review-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.review-user-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.review-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.review-stars {
+  font-size: 0.8rem;
+  color: #F59E0B;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.review-stars span {
+  color: #1E293B;
+  font-weight: 600;
+}
+.review-text {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.5;
+}
+.review-date {
+  font-size: 0.75rem;
+  color: #94A3B8;
+}
+
+@media (max-width: 1024px) {
+  .venue-detail-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .gallery-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .gallery-main {
+    border-radius: 1rem;
+    height: 250px;
+  }
+  .gallery-side {
+    display: none; /* Hide small images on mobile for simplicity */
+  }
+  .highlights-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .venue-title-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
