@@ -58,6 +58,7 @@
   font-weight: 700;
   margin-bottom: 1.5rem;
   z-index: 10;
+  color: white;
 }
 
 .split-login__title-highlight {
