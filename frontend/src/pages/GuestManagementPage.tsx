@@ -143,10 +143,6 @@ function GuestManagementPage() {
     flash(`Invitado "${formName.trim()}" agregado.`);
   }
 
-  function handleDelete(id: string) {
-    setGuests(prev => prev.filter(g => g.id !== id));
-  }
-
   const parsedEmails = bulkRaw.split(/[\n,;]+/).map(e => e.trim()).filter(Boolean);
   const validEmails  = parsedEmails.filter(isValidEmail);
 
@@ -597,7 +593,7 @@ function GuestManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {guests.filter(g => g.rsvpStatus === 'confirmado').map((guest, idx) => (
+                    {guests.filter(g => g.rsvpStatus === 'confirmado').map((guest) => (
                       <tr key={guest.id}>
                         <td className="print-table__check"></td>
                         <td>
