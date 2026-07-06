@@ -1,0 +1,365 @@
+import { useAuth } from '../context/AuthContext';
+import './DashboardPage.css';
+
+const DashboardPage = () => {
+  const { user } = useAuth();
+
+  return (
+    <div className="dashboard-container">
+      {/* HEADER */}
+      <header className="dashboard-header">
+        <div className="dashboard-header__welcome">
+          <h1>¡Bienvenida, {user?.fullName || 'María'}! 👋</h1>
+          <p>Aquí tienes el resumen de tu evento.</p>
+        </div>
+        <div className="dashboard-header__actions">
+          <div className="action-icon">🔍</div>
+          <div className="action-icon">
+            🔔
+            <span className="notification-badge">3</span>
+          </div>
+          <button className="btn-new-event">
+            <span>+</span> Nuevo Evento
+          </button>
+        </div>
+      </header>
+
+      {/* KPI GRID */}
+      <div className="kpi-grid">
+        {/* Tareas Completadas */}
+        <div className="kpi-card">
+          <div className="kpi-card__header">
+            <div className="kpi-card__title-group">
+              <div className="kpi-icon kpi-icon--purple">📋</div>
+              <span className="kpi-title">Tareas Completadas</span>
+            </div>
+            <span className="kpi-more">•••</span>
+          </div>
+          <div className="kpi-value">68%</div>
+          <div className="kpi-footer">
+            <span>34 de 50 tareas</span>
+            <div className="kpi-progress-bar">
+              <div className="kpi-progress-fill kpi-progress-fill--purple" style={{ width: '68%' }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Invitados Confirmados */}
+        <div className="kpi-card">
+          <div className="kpi-card__header">
+            <div className="kpi-card__title-group">
+              <div className="kpi-icon kpi-icon--green">👥</div>
+              <span className="kpi-title">Invitados Confirmados</span>
+            </div>
+            <span className="kpi-more">•••</span>
+          </div>
+          <div className="kpi-value">152</div>
+          <div className="kpi-footer">
+            <span>de 200 invitados</span>
+            <div className="kpi-progress-bar">
+              <div className="kpi-progress-fill kpi-progress-fill--green" style={{ width: '76%' }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Días Restantes */}
+        <div className="kpi-card">
+          <div className="kpi-card__header">
+            <div className="kpi-card__title-group">
+              <div className="kpi-icon kpi-icon--orange">📅</div>
+              <span className="kpi-title">Días Restantes</span>
+            </div>
+            <span className="kpi-more">•••</span>
+          </div>
+          <div className="kpi-value">45</div>
+          <div className="kpi-footer">
+            <span>para el evento</span>
+            <div className="kpi-progress-bar">
+              <div className="kpi-progress-fill kpi-progress-fill--orange" style={{ width: '45%' }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Presupuesto Utilizado */}
+        <div className="kpi-card">
+          <div className="kpi-card__header">
+            <div className="kpi-card__title-group">
+              <div className="kpi-icon kpi-icon--blue">💰</div>
+              <span className="kpi-title">Presupuesto Utilizado</span>
+            </div>
+            <span className="kpi-more">•••</span>
+          </div>
+          <div className="kpi-value">$4,560</div>
+          <div className="kpi-footer">
+            <span>de $7,000</span>
+            <div className="kpi-progress-bar">
+              <div className="kpi-progress-fill kpi-progress-fill--blue" style={{ width: '65%' }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN GRID */}
+      <div className="dashboard-grid">
+        {/* LEFT COLUMN */}
+        <div className="grid-left">
+          {/* Resumen del Evento Actual */}
+          <div className="dash-card">
+            <h2 className="dash-card__title">Resumen del Evento Actual</h2>
+            <div className="event-summary">
+              <div className="event-details">
+                <div className="event-image">
+                  <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Boda" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem'}} />
+                </div>
+                <div className="event-info">
+                  <h3>Boda de Juan & Ana</h3>
+                  <span className="badge-planning">En planificación</span>
+                  <div className="event-meta">
+                    <span>📅 20 de Julio, 2025</span>
+                    <span>📍 Hacienda Los Olivos</span>
+                    <span>👥 200 invitados</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="event-chart">
+                <div className="donut-chart">
+                  <div className="donut-inner">68%</div>
+                </div>
+                <div className="chart-legend">
+                  <div className="legend-item">
+                    <div className="legend-label">
+                      <span className="dot dot--green"></span>
+                      Completadas
+                    </div>
+                    <span className="legend-value">34</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-label">
+                      <span className="dot dot--blue"></span>
+                      En progreso
+                    </div>
+                    <span className="legend-value">10</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="legend-label">
+                      <span className="dot dot--orange"></span>
+                      Pendientes
+                    </div>
+                    <span className="legend-value">6</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Progreso de Tareas */}
+          <div className="dash-card">
+            <h2 className="dash-card__title">Progreso de Tareas</h2>
+            <div className="line-chart-area">
+              <div className="line-chart-labels-y">
+                <span>100%</span>
+                <span>75%</span>
+                <span>50%</span>
+                <span>25%</span>
+                <span>0%</span>
+              </div>
+              
+              {/* Dummy line chart using SVG */}
+              <svg className="line-chart-svg" viewBox="0 0 500 200" preserveAspectRatio="none">
+                <polyline fill="none" stroke="#94A3B8" strokeWidth="2" strokeDasharray="5,5" points="0,200 100,150 200,100 300,50 400,25 500,0" />
+                
+                <path d="M 0 200 Q 50 180 100 160 T 200 130 T 300 70 L 300 200 Z" fill="url(#gradient)" />
+                <polyline fill="none" stroke="#6366F1" strokeWidth="2.5" points="0,200 50,180 100,160 150,135 200,130 250,110 300,70" />
+                
+                <circle cx="300" cy="70" r="4" fill="#6366F1" />
+                <rect x="280" y="45" width="40" height="20" rx="10" fill="#6366F1" />
+                <text x="300" y="58" fill="white" fontSize="10" textAnchor="middle">68%</text>
+
+                <defs>
+                  <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor="rgba(99, 102, 241, 0.2)" />
+                    <stop offset="100%" stopColor="rgba(99, 102, 241, 0)" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <div className="line-chart-labels-x">
+                <span>20 Abr</span>
+                <span>27 Abr</span>
+                <span>4 May</span>
+                <span>11 May</span>
+                <span>18 May</span>
+                <span>25 May</span>
+                <span>1 Jun</span>
+                <span>8 Jun</span>
+              </div>
+            </div>
+            <div className="line-chart-legend">
+              <div className="line-legend-item">
+                <div className="line-solid"></div>
+                Progreso real
+              </div>
+              <div className="line-legend-item">
+                <div className="line-dashed"></div>
+                Progreso ideal
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="grid-right">
+          {/* Próximas Tareas */}
+          <div className="dash-card">
+            <h2 className="dash-card__title">
+              Próximas Tareas
+              <a href="#" className="dash-card__link">Ver todas</a>
+            </h2>
+            <div className="task-list">
+              <div className="task-item">
+                <input type="checkbox" className="task-checkbox" />
+                <div className="task-content">
+                  <div className="task-title">Confirmar menú con catering</div>
+                  <div className="task-priority priority-high">Alta prioridad</div>
+                </div>
+                <div className="task-date">15 May</div>
+              </div>
+              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
+              <div className="task-item">
+                <input type="checkbox" className="task-checkbox" />
+                <div className="task-content">
+                  <div className="task-title">Enviar invitaciones digitales</div>
+                  <div className="task-priority priority-medium">Media prioridad</div>
+                </div>
+                <div className="task-date">18 May</div>
+              </div>
+              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
+              <div className="task-item">
+                <input type="checkbox" className="task-checkbox" />
+                <div className="task-content">
+                  <div className="task-title">Reservar transporte</div>
+                  <div className="task-priority priority-medium">Media prioridad</div>
+                </div>
+                <div className="task-date">22 May</div>
+              </div>
+              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
+              <div className="task-item">
+                <input type="checkbox" className="task-checkbox" />
+                <div className="task-content">
+                  <div className="task-title">Prueba de menú</div>
+                  <div className="task-priority priority-low">Baja prioridad</div>
+                </div>
+                <div className="task-date">25 May</div>
+              </div>
+              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
+              <div className="task-item">
+                <input type="checkbox" className="task-checkbox" defaultChecked />
+                <div className="task-content">
+                  <div className="task-title" style={{textDecoration: 'line-through', color: '#94A3B8'}}>Confirmar decoración floral</div>
+                  <div className="task-priority priority-low">Completada</div>
+                </div>
+                <div className="task-date">10 May</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Presupuesto */}
+          <div className="dash-card">
+            <h2 className="dash-card__title">Presupuesto</h2>
+            <div className="budget-gauge-container">
+              <div className="gauge-chart">
+                <div className="gauge-inner">
+                  <span className="gauge-amount">$4,560</span>
+                  <span className="gauge-total">de $7,000</span>
+                </div>
+              </div>
+              <div className="budget-legend chart-legend">
+                <div className="legend-item">
+                  <div className="legend-label">
+                    <span className="dot dot--blue"></span> Gastado
+                  </div>
+                  <span className="legend-value">$4,560</span>
+                </div>
+                <div className="legend-item">
+                  <div className="legend-label">
+                    <span className="dot" style={{background: '#E2E8F0'}}></span> Restante
+                  </div>
+                  <span className="legend-value">$2,440</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Próximos Eventos */}
+          <div className="dash-card">
+            <h2 className="dash-card__title">
+              Próximos Eventos
+              <a href="#" className="dash-card__link">Ver calendario</a>
+            </h2>
+            <div className="event-list">
+              <div className="event-item">
+                <div className="event-date-badge">
+                  <div className="event-month">MAY</div>
+                  <div className="event-day">15</div>
+                </div>
+                <div className="event-item-info">
+                  <div className="event-item-title">Prueba de menú</div>
+                  <div className="event-item-meta">
+                    <span>2:00 PM - 4:00 PM</span>
+                    <span>📍 Hacienda Los Olivos</span>
+                  </div>
+                </div>
+                <div className="event-chevron">›</div>
+              </div>
+              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
+              <div className="event-item">
+                <div className="event-date-badge">
+                  <div className="event-month">MAY</div>
+                  <div className="event-day">20</div>
+                </div>
+                <div className="event-item-info">
+                  <div className="event-item-title">Reunión con decorador</div>
+                  <div className="event-item-meta">
+                    <span>11:00 AM - 12:00 PM</span>
+                    <span>📍 Oficina / Online</span>
+                  </div>
+                </div>
+                <div className="event-chevron">›</div>
+              </div>
+              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
+              <div className="event-item">
+                <div className="event-date-badge">
+                  <div className="event-month">MAY</div>
+                  <div className="event-day">25</div>
+                </div>
+                <div className="event-item-info">
+                  <div className="event-item-title">Entrega final de invitados</div>
+                  <div className="event-item-meta">
+                    <span>Todo el día</span>
+                    <span>-- --</span>
+                  </div>
+                </div>
+                <div className="event-chevron">›</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Suggestion Banner */}
+      <div className="ai-suggestion">
+        <div className="ai-suggestion-text">
+          <span className="ai-icon">✨</span>
+          <span>La IA detectó <strong>3 sugerencias</strong> para optimizar tu evento.</span>
+        </div>
+        <div className="ai-actions">
+          <button className="btn-outline-purple">Ver sugerencias</button>
+          <button className="btn-close">×</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardPage;

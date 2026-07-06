@@ -1,0 +1,347 @@
+/* src/pages/ChronogramPage.css */
+.chronogram-container {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  background-color: #F8FAFC;
+  min-height: 100%;
+  color: #0F172A;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Header */
+.chrono-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748B;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.back-link:hover {
+  color: #1E293B;
+}
+
+.chrono-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.btn-new-task {
+  background-color: #6366F1;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+}
+.btn-new-task:hover {
+  background-color: #4F46E5;
+}
+
+/* Main Title Area */
+.chrono-title-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.chrono-title h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chrono-subtitle {
+  color: #64748B;
+  font-size: 1rem;
+  margin: 0;
+}
+.chrono-subtitle-highlight {
+  color: #6366F1;
+  font-weight: 600;
+}
+
+.chrono-event-info {
+  display: flex;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  gap: 3rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.chrono-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.chrono-info-label {
+  font-size: 0.75rem;
+  color: #94A3B8;
+}
+.chrono-info-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.chrono-info-value.blue-text {
+  color: #4F46E5;
+}
+
+/* Filters */
+.chrono-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+}
+
+.filter-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  background: white;
+  color: #64748B;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background: #F8FAFC;
+}
+
+.filter-btn.active {
+  background: #F5F3FF;
+  border-color: #F5F3FF;
+  color: #6366F1;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-dot.grey { background: #94A3B8; }
+.status-dot.blue { background: #3B82F6; }
+.status-dot.green { background: #10B981; }
+
+.btn-calendar-view {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  background: white;
+  color: #6366F1;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Timeline */
+.timeline-container {
+  position: relative;
+  padding-left: 5rem; /* Space for the milestone boxes */
+}
+
+/* Vertical connecting line */
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  left: 7rem; /* Centers the line with the circles */
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #E0E7FF;
+  z-index: 1;
+}
+
+/* Milestone Section */
+.timeline-section {
+  position: relative;
+  margin-bottom: 3rem;
+}
+
+.milestone-marker {
+  position: absolute;
+  left: -5rem;
+  top: 0;
+  width: 56px;
+  height: 56px;
+  background: #6366F1;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1.1;
+  z-index: 2;
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+}
+.milestone-marker span {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.timeline-circle {
+  position: absolute;
+  left: 1.6rem; /* Center of the vertical line */
+  top: 1.2rem;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border: 3px solid #6366F1;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.milestone-header {
+  margin-left: 3.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-top: 0.5rem;
+}
+
+.milestone-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.milestone-date {
+  font-size: 0.85rem;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+/* Task List */
+.task-list-wrapper {
+  margin-left: 3.5rem;
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #F1F5F9;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  overflow: hidden;
+}
+
+.timeline-task {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #F1F5F9;
+  gap: 1rem;
+  transition: background 0.2s;
+}
+.timeline-task:last-child {
+  border-bottom: none;
+}
+.timeline-task:hover {
+  background: #F8FAFC;
+}
+
+.task-checkbox-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #CBD5E1;
+  cursor: pointer;
+}
+
+.task-name {
+  flex: 2;
+  font-size: 0.95rem;
+  color: #1E293B;
+  font-weight: 500;
+}
+
+.task-assignee {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748B;
+}
+
+.task-date-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748B;
+}
+
+.task-status-container {
+  width: 100px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.status-pill.completada {
+  background: #ECFDF5;
+  color: #10B981;
+}
+.status-pill.progreso {
+  background: #EFF6FF;
+  color: #3B82F6;
+}
+.status-pill.pendiente {
+  background: #FFF7ED;
+  color: #F97316;
+}
+
+.task-menu {
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: 1rem;
+}
