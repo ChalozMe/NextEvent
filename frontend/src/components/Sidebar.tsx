@@ -9,8 +9,9 @@ const navItems = [
   { to: '/chronogram', icon: '✨', label: 'Cronograma IA', enabled: true },
   { to: '/venues', icon: '📍', label: 'Locales', enabled: true },
   { to: '/guests', icon: '👥', label: 'Invitados RSVP', enabled: true },
-  { to: '/gallery', icon: '🖼️', label: 'Galería', enabled: false },
-  { to: '/settings', icon: '⚙️', label: 'Configuración', enabled: false },
+  { to: '/gallery', icon: '🖼️', label: 'Galería', enabled: true },
+  { to: '/ratings', icon: '⭐', label: 'Calificar servicios', enabled: true },
+  { to: '/settings', icon: '⚙️', label: 'Configuración', enabled: true },
 ];
 
 const Sidebar = () => {
@@ -41,6 +42,22 @@ const Sidebar = () => {
     aiTitle = '✨ ¿Necesitas ayuda?';
     aiDesc = 'Nuestra IA puede recomendar el lugar perfecto para tu evento.';
     aiBtn = 'Buscar con IA';
+  } else if (location.pathname === '/guests') {
+    aiTitle = '✨ Gestión inteligente';
+    aiDesc = 'La IA puede sugerirte la distribución de mesas y detectar invitados sin confirmar.';
+    aiBtn = 'Optimizar mesas';
+  } else if (location.pathname === '/gallery') {
+    aiTitle = '🖼️ Álbum compartido';
+    aiDesc = 'Los invitados pueden subir fotos del evento. Todas las fotos están visibles para todos los invitados.';
+    aiBtn = '▶ Ver cómo funciona';
+  } else if (location.pathname === '/ratings') {
+    aiTitle = '⭐ Sistema de valoraciones';
+    aiDesc = 'Tu opinión ayuda a otros invitados a tomar mejores decisiones y a los proveedores a seguir mejorando.';
+    aiBtn = '❔ ¿Por qué calificar?';
+  } else if (location.pathname === '/settings') {
+    aiTitle = '⚙️ Configuración asistida';
+    aiDesc = 'Nuestra IA puede ajustar automáticamente tus preferencias basándose en tu tipo de eventos.';
+    aiBtn = 'Ajuste inteligente';
   }
 
   return (

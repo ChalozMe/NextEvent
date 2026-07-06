@@ -9,14 +9,25 @@ import ChronogramPage from './pages/ChronogramPage';
 import VenueCatalogPage from './pages/VenueCatalogPage';
 import VenueDetailPage from './pages/VenueDetailPage';
 import GuestManagementPage from './pages/GuestManagementPage';
+import RSVPConfirmPage from './pages/RSVPConfirmPage';
+import RSVPResponsePage from './pages/RSVPResponsePage';
+import GalleryPage from './pages/GalleryPage';
+import RatingsPage from './pages/RatingsPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public route */}
+          {/* Rutas públicas */}
           <Route path="/login" element={<LoginPage />} />
+
+          {/* Rutas RSVP públicas — sin autenticación (US-06) */}
+          <Route path="/rsvp/:token" element={<RSVPConfirmPage />} />
+          <Route path="/rsvp/success"  element={<RSVPResponsePage />} />
+          <Route path="/rsvp/declined" element={<RSVPResponsePage />} />
+          <Route path="/rsvp/expired"  element={<RSVPResponsePage />} />
 
           {/* Protected routes with sidebar layout */}
           <Route
@@ -32,6 +43,9 @@ function App() {
             <Route path="/venues" element={<VenueCatalogPage />} />
             <Route path="/venues/:id" element={<VenueDetailPage />} />
             <Route path="/guests" element={<GuestManagementPage />} />
+            <Route path="/gallery" element={<GalleryPage />} />
+            <Route path="/ratings" element={<RatingsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
 
           {/* Catch-all */}
