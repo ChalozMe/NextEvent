@@ -2,39 +2,49 @@ import type { LoginRequest, RegisterRequest, AuthResponse } from '../types';
 
 export const authService = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
-    // Mock response para permitir probar el frontend sin necesidad del backend
-    console.log("Mock login for frontend testing");
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          token: "mock-jwt-token-12345",
-          username: data.email.split('@')[0],
-          email: data.email,
-          fullName: "Usuario de Prueba",
-          role: "ADMIN"
-        });
-      }, 800);
+    const response = await fetch("http://localhost:8080/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     });
+
+    if (!response.ok) {
+      throw new Error("Login failed");
+    }
+
+    return await response.json();
   },
 
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
-    // Mock response para el registro
-    console.log("Mock register for frontend testing");
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          token: "mock-jwt-token-12345",
-          username: data.username,
-          email: data.email,
-          fullName: data.fullName,
-          role: "USER"
-        });
-      }, 800);
+    const response = await fetch("http://localhost:8080/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: data.fullName,
+        email: data.email,
+        password: data.password
+      })
     });
+  
+
+    if (!response.ok) {
+      throw new Error("Error al registrar usuario");
+    }
+
+    return {
+      token: "demo-token",
+      username: data.username,
+      email: data.email,
+      fullName: data.fullName,
+      role: "USER"
+    };
   },
 
   logout: (): void => {
-    // El borrado del token y localStorage ya se maneja en AuthContext.tsx
     console.log("Mock logout");
   }
 };
