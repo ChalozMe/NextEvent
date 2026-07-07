@@ -223,16 +223,6 @@ const LoginPage = () => {
 
           {!isRegister && (
             <>
-              <div className="split-divider">o continuar con</div>
-
-              <div className="split-social-btns">
-                <button type="button" className="split-social-btn" onClick={fillDemoCredentials}>
-                  <span style={{color: '#EA4335'}}>G</span> Google (Demo)
-                </button>
-                <button type="button" className="split-social-btn" onClick={fillDemoCredentials}>
-                  <span style={{color: '#00A4EF'}}>❖</span> Microsoft (Demo)
-                </button>
-              </div>
             </>
           )}
 
