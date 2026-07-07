@@ -13,7 +13,8 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, register } = useAuth();
+
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -21,26 +22,34 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
+
       if (isRegister) {
+
         if (!fullName.trim()) {
-          setError('Por favor ingresa tu nombre completo.');
-          setIsLoading(false);
+          setError("Por favor ingresa tu nombre completo.");
           return;
         }
-        // Registration logic would go here
-        setIsRegister(false);
-        setEmail('');
-        setPassword('');
-        setFullName('');
-        setIsLoading(false);
+
+        await register({
+          username: email.split("@")[0],
+          fullName,
+          email,
+          password
+        });
+
+        navigate("/");
         return;
       }
 
       await login({ email, password });
-      navigate('/');
-    } catch {
-      setError('Credenciales incorrectas. Verifica tu email y contraseña.');
-    } finally {
+      navigate("/");
+
+      } catch (error) {
+
+        console.error(error);
+        setError("Error al iniciar sesión o registrar usuario.");
+
+      } finally {
       setIsLoading(false);
     }
   };
