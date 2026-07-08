@@ -2,6 +2,7 @@ package com.is3.eventmanager.controller;
 
 import com.is3.eventmanager.dto.RegisterRequest;
 import com.is3.eventmanager.dto.LoginRequest;
+import com.is3.eventmanager.dto.LoginResponse;
 import com.is3.eventmanager.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,13 +27,11 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(
+        @RequestBody LoginRequest request) {
 
-    if (authService.login(request)) {
-        return "Login successful";
-    }
+    LoginResponse response = authService.login(request);
 
-    return "Invalid credentials";
+    return ResponseEntity.ok(response);
 }
-
 }
