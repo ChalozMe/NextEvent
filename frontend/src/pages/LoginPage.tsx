@@ -53,11 +53,13 @@ const LoginPage = () => {
       setIsLoading(false);
     }
   };
-
+  
+  {/*
   const fillDemoCredentials = () => {
     setEmail('admin@nexevent.com');
     setPassword('admin123');
   };
+  */}
 
   return (
     <div className="split-login">
