@@ -13,7 +13,8 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, register } = useAuth();
+
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -21,34 +22,44 @@ const LoginPage = () => {
     setIsLoading(true);
 
     try {
+
       if (isRegister) {
+
         if (!fullName.trim()) {
-          setError('Por favor ingresa tu nombre completo.');
-          setIsLoading(false);
+          setError("Por favor ingresa tu nombre completo.");
           return;
         }
-        // Registration logic would go here
-        setIsRegister(false);
-        setEmail('');
-        setPassword('');
-        setFullName('');
-        setIsLoading(false);
+
+        await register({
+          username: email.split("@")[0],
+          fullName,
+          email,
+          password
+        });
+
+        navigate("/");
         return;
       }
 
       await login({ email, password });
-      navigate('/');
-    } catch {
-      setError('Credenciales incorrectas. Verifica tu email y contraseña.');
-    } finally {
+      navigate("/");
+
+      } catch (error) {
+
+        console.error(error);
+        setError("Error al iniciar sesión o registrar usuario.");
+
+      } finally {
       setIsLoading(false);
     }
   };
-
+  
+  {/*
   const fillDemoCredentials = () => {
     setEmail('admin@nexevent.com');
     setPassword('admin123');
   };
+  */}
 
   return (
     <div className="split-login">
@@ -214,16 +225,6 @@ const LoginPage = () => {
 
           {!isRegister && (
             <>
-              <div className="split-divider">o continuar con</div>
-
-              <div className="split-social-btns">
-                <button type="button" className="split-social-btn" onClick={fillDemoCredentials}>
-                  <span style={{color: '#EA4335'}}>G</span> Google (Demo)
-                </button>
-                <button type="button" className="split-social-btn" onClick={fillDemoCredentials}>
-                  <span style={{color: '#00A4EF'}}>❖</span> Microsoft (Demo)
-                </button>
-              </div>
             </>
           )}
 
