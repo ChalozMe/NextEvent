@@ -8,6 +8,8 @@ import com.is3.eventmanager.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.is3.eventmanager.security.JwtService;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -16,10 +18,12 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder =  passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     public void register(RegisterRequest request) {
@@ -29,8 +33,6 @@ public class AuthService {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
 
-        // temporalmente SIN BCrypt
-        // user.setPasswordHash(request.getPassword());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
         user.setCreatedAt(LocalDateTime.now());
@@ -54,11 +56,9 @@ public class AuthService {
     }
 
     LoginResponse response = new LoginResponse();
-
-    // Token temporal para que el frontend funcione.
-    response.setToken("demo-token");
-
-    // El frontend espera estos campos.
+    //token jwt generate
+    response.setToken(jwtService.generateToken(user.getEmail()));
+    // conect with front
     response.setUsername(user.getName());
     response.setFullName(user.getName());
     response.setEmail(user.getEmail());
