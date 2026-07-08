@@ -35,7 +35,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        //No olvidar regresar a /api/auth/**
         http
           .cors(Customizer.withDefaults())
 
