@@ -134,4 +134,5 @@ export interface CreateEventRequest {
   description: string;
   status: string;
   budget: number;
+  coverImage?: string;
 }

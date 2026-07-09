@@ -63,7 +63,7 @@ public class EventService {
       event.setBudget(request.getBudget());
       event.setBudgetUsed(BigDecimal.ZERO);
 
-      event.setCoverImage(null);
+      event.setCoverImage(request.getCoverImage());
 
       event = eventRepository.save(event);
 

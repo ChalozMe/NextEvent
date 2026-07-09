@@ -118,6 +118,10 @@ const DashboardPage = () => {
     );
   }
 
+  if (!selectedEvent) {
+    return null;
+  }
+
   return (
     <div className="dashboard-container">
       {/* HEADER */}
