@@ -12,6 +12,12 @@ const VenueCatalogPage = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Favorites state persisted in localStorage
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    const saved = localStorage.getItem('nexevent_favorite_venues');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // Filters state
   const [activeCategory, setActiveCategory] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,6 +40,16 @@ const VenueCatalogPage = () => {
 
     fetchVenues();
   }, [activeCategory]);
+
+  const toggleFavorite = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setFavorites((prev) => {
+      const isFav = prev.includes(id);
+      const updated = isFav ? prev.filter((favId) => favId !== id) : [...prev, id];
+      localStorage.setItem('nexevent_favorite_venues', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Distritos únicos disponibles
   const districts = ['Todos', 'Yanahuara', 'Sabandía', 'Cayma', 'Sachaca', 'Cercado', 'José Luis Bustamante', 'Selva Alegre', 'Socabaya', 'Characato', 'Tiabaya', 'Cerro Colorado'];
@@ -215,7 +231,13 @@ const VenueCatalogPage = () => {
             <div key={venue.id} className="venue-card" onClick={() => navigate(`/venues/${venue.id}`)}>
               <div className="venue-card-img-wrapper">
                 <img src={venue.image} alt={venue.name} className="venue-card-img" />
-                <button className="venue-card-like" onClick={(e) => e.stopPropagation()}>♡</button>
+                <button 
+                  className={`venue-card-like ${favorites.includes(venue.id) ? 'active' : ''}`} 
+                  onClick={(e) => toggleFavorite(e, venue.id)}
+                  title={favorites.includes(venue.id) ? "Quitar de favoritos" : "Guardar en favoritos"}
+                >
+                  {favorites.includes(venue.id) ? '♥' : '♡'}
+                </button>
                 <span className={`venue-type-badge ${getTypeClass(venue.category)}`}>{venue.category}</span>
               </div>
               <div className="venue-card-content">

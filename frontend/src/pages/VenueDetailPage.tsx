@@ -8,6 +8,7 @@ const VenueDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     const fetchVenue = async () => {
@@ -24,7 +25,24 @@ const VenueDetailPage = () => {
     };
 
     fetchVenue();
+
+    if (id) {
+      const saved = localStorage.getItem('nexevent_favorite_venues');
+      if (saved) {
+        const favList: string[] = JSON.parse(saved);
+        setIsFavorite(favList.includes(id));
+      }
+    }
   }, [id]);
+
+  const toggleFavorite = () => {
+    if (!id) return;
+    const saved = localStorage.getItem('nexevent_favorite_venues');
+    const favList: string[] = saved ? JSON.parse(saved) : [];
+    const updated = isFavorite ? favList.filter((favId) => favId !== id) : [...favList, id];
+    localStorage.setItem('nexevent_favorite_venues', JSON.stringify(updated));
+    setIsFavorite(!isFavorite);
+  };
 
   if (loading) {
     return (
@@ -57,7 +75,13 @@ const VenueDetailPage = () => {
             🔔
             <span className="notification-badge" style={{position: 'absolute', top: '-5px', right: '-5px', background: '#6366F1', color: 'white', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem'}}>3</span>
           </div>
-          <button className="btn-icon-circular">♡</button>
+          <button 
+            className={`btn-icon-circular ${isFavorite ? 'active' : ''}`}
+            onClick={toggleFavorite}
+            title={isFavorite ? "Quitar de favoritos" : "Guardar en favoritos"}
+          >
+            {isFavorite ? '♥' : '♡'}
+          </button>
           <button className="btn-reserve-header">
             📅 Reservar este lugar
           </button>
@@ -186,7 +210,13 @@ const VenueDetailPage = () => {
               <button className="btn-secondary-full">
                 💬 Consultar disponibilidad
               </button>
-              <button className="btn-icon-square">♡</button>
+              <button 
+                className={`btn-icon-square ${isFavorite ? 'active' : ''}`}
+                onClick={toggleFavorite}
+                title={isFavorite ? "Quitar de favoritos" : "Guardar en favoritos"}
+              >
+                {isFavorite ? '♥' : '♡'}
+              </button>
             </div>
           </div>
 

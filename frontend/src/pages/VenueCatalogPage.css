@@ -298,6 +298,14 @@
 .venue-card-like:hover {
   background: rgba(0,0,0,0.5);
 }
+.venue-card-like.active {
+  background: #EF4444;
+  color: white;
+  transform: scale(1.1);
+}
+.venue-card-like.active:hover {
+  background: #DC2626;
+}
 
 .venue-type-badge {
   position: absolute;

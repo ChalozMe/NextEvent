@@ -53,6 +53,11 @@
   background: #F1F5F9;
   color: #1E293B;
 }
+.btn-icon-circular.active, .btn-icon-square.active {
+  background: #FEE2E2;
+  color: #EF4444;
+  border-color: #FCA5A5;
+}
 
 .btn-reserve-header {
   background-color: #6366F1;
