@@ -1,8 +1,37 @@
 import { useAuth } from '../context/AuthContext';
 import './DashboardPage.css';
+import { useEffect, useState } from "react";
+import { eventService } from "../services/eventService";
+import type { NexEvent } from "../types";
 
 const DashboardPage = () => {
+  
+
   const { user } = useAuth();
+
+  const [events, setEvents] = useState<NexEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<NexEvent | null>(null);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const data = await eventService.getEvents();
+        setEvents(data);
+
+      if (data.length > 0) {
+          setSelectedEvent(data[0]);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadEvents();
+  }, []);
+
+  if (!selectedEvent) {
+    return <p>Cargando eventos...</p>;
+  }
 
   return (
     <div className="dashboard-container">
@@ -18,9 +47,11 @@ const DashboardPage = () => {
             🔔
             <span className="notification-badge">3</span>
           </div>
+
           <button className="btn-new-event">
             <span>+</span> Nuevo Evento
           </button>
+
         </div>
       </header>
 
@@ -112,12 +143,13 @@ const DashboardPage = () => {
                   <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Boda" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem'}} />
                 </div>
                 <div className="event-info">
-                  <h3>Boda de Juan & Ana</h3>
+                  <h3>{selectedEvent.name}</h3>
                   <span className="badge-planning">En planificación</span>
                   <div className="event-meta">
-                    <span>📅 20 de Julio, 2025</span>
+                    
+                    <span>📅 {new Date(selectedEvent.date).toLocaleDateString()} </span>
                     <span>📍 Hacienda Los Olivos</span>
-                    <span>👥 200 invitados</span>
+                    <span>👥 {selectedEvent.capacity} invitados</span>
                   </div>
                 </div>
               </div>
