@@ -1,8 +1,37 @@
 import { useAuth } from '../context/AuthContext';
 import './DashboardPage.css';
+import { useEffect, useState } from "react";
+import { eventService } from "../services/eventService";
+import type { NexEvent } from "../types";
 
 const DashboardPage = () => {
+  
+
   const { user } = useAuth();
+
+  const [events, setEvents] = useState<NexEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<NexEvent | null>(null);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const data = await eventService.getEvents();
+        setEvents(data);
+
+      if (data.length > 0) {
+          setSelectedEvent(data[0]);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadEvents();
+  }, []);
+
+  if (!selectedEvent) {
+    return <p>Cargando eventos...</p>;
+  }
 
   return (
     <div className="dashboard-container">
@@ -18,9 +47,21 @@ const DashboardPage = () => {
             🔔
             <span className="notification-badge">3</span>
           </div>
-          <button className="btn-new-event">
-            <span>+</span> Nuevo Evento
-          </button>
+
+          <select
+            value={selectedEvent?.id}
+            onChange={(e) => {
+              const event = events.find(ev => ev.id === e.target.value);
+                if (event) setSelectedEvent(event);
+            }}
+          >
+            {events.map(event => (
+            <option key={event.id} value={event.id}>
+            {event.name}
+            </option>
+            ))}
+          </select>
+
         </div>
       </header>
 
@@ -37,7 +78,7 @@ const DashboardPage = () => {
           </div>
           <div className="kpi-value">68%</div>
           <div className="kpi-footer">
-            <span>34 de 50 tareas</span>
+            <span>{selectedEvent.tasksCompleted} de {selectedEvent.tasksTotal} tareas</span>
             <div className="kpi-progress-bar">
               <div className="kpi-progress-fill kpi-progress-fill--purple" style={{ width: '68%' }}></div>
             </div>
@@ -53,9 +94,9 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">152</div>
+          <div className="kpi-value">{selectedEvent.guestsConfirmed}</div>
           <div className="kpi-footer">
-            <span>de 200 invitados</span>
+            <span>de {selectedEvent.guestsTotal} invitados</span>
             <div className="kpi-progress-bar">
               <div className="kpi-progress-fill kpi-progress-fill--green" style={{ width: '76%' }}></div>
             </div>
@@ -89,9 +130,9 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">$4,560</div>
+          <div className="kpi-value">${selectedEvent.budgetUsed}</div>
           <div className="kpi-footer">
-            <span>de $7,000</span>
+            <span>de ${selectedEvent.budget}</span>
             <div className="kpi-progress-bar">
               <div className="kpi-progress-fill kpi-progress-fill--blue" style={{ width: '65%' }}></div>
             </div>
@@ -112,12 +153,15 @@ const DashboardPage = () => {
                   <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Boda" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem'}} />
                 </div>
                 <div className="event-info">
-                  <h3>Boda de Juan & Ana</h3>
-                  <span className="badge-planning">En planificación</span>
+                  <h3>{selectedEvent.name}</h3>
+                  <span className="badge-planning">
+                    {selectedEvent.status}
+                  </span>
                   <div className="event-meta">
-                    <span>📅 20 de Julio, 2025</span>
-                    <span>📍 Hacienda Los Olivos</span>
-                    <span>👥 200 invitados</span>
+                    
+                    <span>📅 {new Date(selectedEvent.date).toLocaleDateString()} </span>
+                    <span>📍 {selectedEvent.location || "Sin ubicación"}</span>
+                    <span>👥 {selectedEvent.capacity} invitados</span>
                   </div>
                 </div>
               </div>
