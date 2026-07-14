@@ -6,6 +6,7 @@ import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.entity.UserEvent;
 import com.is3.eventmanager.service.EventService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 import java.util.List;
 
 @RestController
@@ -27,8 +28,8 @@ public class EventController {
     }
 
     @GetMapping
-    public List<Event> getAllEvents() {
-    return eventService.getAllEvents();
+    public List<Event> getEvents(Authentication authentication) {
+      return eventService.getEventsByUser(authentication.getName());
     }
 
     @PostMapping("/{eventId}/join")

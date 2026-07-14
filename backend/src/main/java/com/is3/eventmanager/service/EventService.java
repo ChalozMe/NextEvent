@@ -36,7 +36,6 @@ public class EventService {
         eventRepository.save(event);
     }
 
-
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }
@@ -61,5 +60,12 @@ public class EventService {
 
     public List<UserEvent> getParticipants(Long eventId) {
       return userEventRepository.findByEventId(eventId);
+    }
+
+    public List<Event> getEventsByUser(String email) {
+      List<UserEvent> userEvents = userEventRepository.findByUserEmail(email);
+      return userEvents.stream()
+        .map(UserEvent::getEvent)
+        .toList();
     }
 }
