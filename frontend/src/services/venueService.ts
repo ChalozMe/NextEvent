@@ -12,6 +12,13 @@ const galleryPool = [
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_gPqaHgLM1CEfBOh57xi32ZtewbA6fOJxmOBCjSLkGzdk7lI-I2HKAh-a&s=10"
 ];
 
+export interface VenueReservationData {
+  reservedDate: string; // YYYY-MM-DD
+  bufferBeforeDates: string[];
+  bufferAfterDates: string[];
+  status: string;
+}
+
 export const venueService = {
   async getVenues(category?: string): Promise<Venue[]> {
     const url = category && category !== "Todos" 
@@ -80,5 +87,30 @@ export const venueService = {
         galleryPool[(idNum + 3) % galleryPool.length]
       ]
     };
+  },
+
+  async getVenueReservations(venueId: string): Promise<VenueReservationData[]> {
+    const response = await fetch(`${API_URL}/${venueId}/reservations`);
+    if (!response.ok) {
+      throw new Error("No se pudieron obtener las reservas");
+    }
+    return response.json();
+  },
+
+  async createVenueReservation(venueId: string, date: string): Promise<VenueReservationData> {
+    const response = await fetch(`${API_URL}/${venueId}/reservations`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ date })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Error al realizar la reserva");
+    }
+
+    return response.json();
   }
 };

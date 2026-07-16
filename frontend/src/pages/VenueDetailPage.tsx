@@ -1,14 +1,36 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { venueService } from '../services/venueService';
+import { venueService, type VenueReservationData } from '../services/venueService';
 import type { Venue } from '../types';
 import './VenueDetailPage.css';
+
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
 
 const VenueDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [venue, setVenue] = useState<Venue | null>(null);
+  const [reservations, setReservations] = useState<VenueReservationData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // Calendar State (Default: July 2025)
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1));
+  const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
+  const [reserving, setReserving] = useState(false);
+  const [resSuccessMsg, setResSuccessMsg] = useState<string | null>(null);
+  const [resErrorMsg, setResErrorMsg] = useState<string | null>(null);
+
+  const fetchReservations = async (venueId: string) => {
+    try {
+      const data = await venueService.getVenueReservations(venueId);
+      setReservations(data);
+    } catch (err) {
+      console.error("Error al obtener reservas del local:", err);
+    }
+  };
 
   useEffect(() => {
     const fetchVenue = async () => {
@@ -17,6 +39,7 @@ const VenueDetailPage = () => {
       try {
         const data = await venueService.getVenueById(id);
         setVenue(data);
+        await fetchReservations(id);
       } catch (err) {
         console.error("Error al obtener detalle del local:", err);
       } finally {
@@ -44,6 +67,110 @@ const VenueDetailPage = () => {
     setIsFavorite(!isFavorite);
   };
 
+  // Month navigation
+  const prevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  // Helper to format date YYYY-MM-DD
+  const formatDateString = (year: number, monthZeroBased: number, day: number) => {
+    const m = String(monthZeroBased + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${year}-${m}-${d}`;
+  };
+
+  // Check status of date: 'RESERVADO' | 'MANTENIMIENTO' | 'DISPONIBLE'
+  const getDateStatus = (dateStr: string) => {
+    for (const res of reservations) {
+      if (res.reservedDate === dateStr) {
+        return 'RESERVADO';
+      }
+      if (res.bufferBeforeDates.includes(dateStr) || res.bufferAfterDates.includes(dateStr)) {
+        return 'MANTENIMIENTO';
+      }
+    }
+    return 'DISPONIBLE';
+  };
+
+  // Build calendar days array for current month view
+  const buildCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Monday = 0
+    const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+
+    const days = [];
+
+    // Previous month padding
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+      days.push({
+        dayNumber: prevMonthDays - i,
+        isOtherMonth: true,
+        dateStr: '',
+        status: 'OTHER'
+      });
+    }
+
+    // Current month days
+    for (let d = 1; d <= totalDaysInMonth; d++) {
+      const dateStr = formatDateString(year, month, d);
+      const status = getDateStatus(dateStr);
+      days.push({
+        dayNumber: d,
+        isOtherMonth: false,
+        dateStr,
+        status
+      });
+    }
+
+    return days;
+  };
+
+  const handleDayClick = (dayObj: { isOtherMonth: boolean; dateStr: string; status: string }) => {
+    if (dayObj.isOtherMonth) return;
+    if (dayObj.status === 'RESERVADO') {
+      alert("Esta fecha ya se encuentra RESERVADA por otro evento.");
+      return;
+    }
+    if (dayObj.status === 'MANTENIMIENTO') {
+      alert("Esta fecha está BLOQUEADA por mantenimiento, limpieza y acondicionamiento del local (4 días antes/después de un evento).");
+      return;
+    }
+    setSelectedDateStr(dayObj.dateStr);
+    setResErrorMsg(null);
+    setResSuccessMsg(null);
+  };
+
+  const handleMakeReservation = async () => {
+    if (!selectedDateStr) {
+      alert("Por favor, selecciona primero un día disponible (en verde) en el calendario.");
+      return;
+    }
+
+    if (!id) return;
+
+    setReserving(true);
+    setResErrorMsg(null);
+    setResSuccessMsg(null);
+
+    try {
+      await venueService.createVenueReservation(id, selectedDateStr);
+      setResSuccessMsg(`¡Reserva confirmada para el ${selectedDateStr}! Se han bloqueado 4 días antes y 4 días después por mantenimiento y limpieza.`);
+      setSelectedDateStr(null);
+      await fetchReservations(id);
+    } catch (err: any) {
+      setResErrorMsg(err.message || "No se pudo completar la reserva");
+    } finally {
+      setReserving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="venue-detail-container">
@@ -62,6 +189,8 @@ const VenueDetailPage = () => {
       </div>
     );
   }
+
+  const calendarDays = buildCalendarDays();
 
   return (
     <div className="venue-detail-container">
@@ -82,8 +211,8 @@ const VenueDetailPage = () => {
           >
             {isFavorite ? '♥' : '♡'}
           </button>
-          <button className="btn-reserve-header">
-            📅 Reservar este lugar
+          <button className="btn-reserve-header" onClick={handleMakeReservation} disabled={reserving}>
+            {reserving ? "Procesando..." : "📅 Reservar este lugar"}
           </button>
         </div>
       </div>
@@ -200,13 +329,27 @@ const VenueDetailPage = () => {
             </div>
             <div className="pricing-amount">S/ {venue.price.toLocaleString()}</div>
             <p className="pricing-note">
-              El precio puede variar según la fecha seleccionada y el paquete contratado.
+              {selectedDateStr 
+                ? `Fecha seleccionada: ${selectedDateStr}` 
+                : 'Selecciona una fecha disponible (en verde) en el calendario.'}
             </p>
 
-            <button className="btn-primary-full">
-              📅 Reservar este lugar
+            {resSuccessMsg && (
+              <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                {resSuccessMsg}
+              </div>
+            )}
+
+            {resErrorMsg && (
+              <div style={{ background: '#FEE2E2', border: '1px solid #FCA5A5', color: '#991B1B', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                {resErrorMsg}
+              </div>
+            )}
+
+            <button className="btn-primary-full" onClick={handleMakeReservation} disabled={reserving}>
+              {reserving ? "Reservando..." : selectedDateStr ? `📅 Confirmar Reserva (${selectedDateStr})` : "📅 Reservar este lugar"}
             </button>
-            <div className="secondary-actions">
+            <div className="secondary-actions" style={{ marginTop: '0.5rem' }}>
               <button className="btn-secondary-full">
                 💬 Consultar disponibilidad
               </button>
@@ -217,6 +360,71 @@ const VenueDetailPage = () => {
               >
                 {isFavorite ? '♥' : '♡'}
               </button>
+            </div>
+          </div>
+
+          {/* Interactive Calendar Card */}
+          <div className="sidebar-card calendar-card">
+            <h3>Calendario de Disponibilidad</h3>
+            <div className="calendar-month-nav">
+              <button className="calendar-nav-btn" onClick={prevMonth}>‹</button>
+              <span>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
+              <button className="calendar-nav-btn" onClick={nextMonth}>›</button>
+            </div>
+            
+            <div className="calendar-grid">
+              <div className="calendar-day-header">LUN</div>
+              <div className="calendar-day-header">MAR</div>
+              <div className="calendar-day-header">MIÉ</div>
+              <div className="calendar-day-header">JUE</div>
+              <div className="calendar-day-header">VIE</div>
+              <div className="calendar-day-header">SÁB</div>
+              <div className="calendar-day-header">DOM</div>
+
+              {calendarDays.map((dayObj, index) => {
+                if (dayObj.isOtherMonth) {
+                  return (
+                    <div key={index} className="calendar-day other-month">
+                      {dayObj.dayNumber}
+                    </div>
+                  );
+                }
+
+                const isSelected = selectedDateStr === dayObj.dateStr;
+                let statusClass = 'disponible';
+                let dayTitle = 'Disponible para reservar';
+
+                if (dayObj.status === 'RESERVADO') {
+                  statusClass = 'reservado';
+                  dayTitle = 'Reservado por evento';
+                } else if (dayObj.status === 'MANTENIMIENTO') {
+                  statusClass = 'mantenimiento';
+                  dayTitle = 'Bloqueado por mantenimiento/limpieza (4 días antes/después)';
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className={`calendar-day ${statusClass} ${isSelected ? 'selected' : ''}`}
+                    onClick={() => handleDayClick(dayObj)}
+                    title={dayTitle}
+                  >
+                    {dayObj.dayNumber}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="calendar-legend">
+              <div className="legend-item" title="Día libre para reservar">
+                <span className="legend-dot disponible"></span> Disponible
+              </div>
+              <div className="legend-item" title="Día reservado por evento">
+                <span className="legend-dot reservado"></span> Reservado
+              </div>
+              <div className="legend-item" title="4 días antes y después por mantenimiento/limpieza">
+                <span className="legend-dot mantenimiento"></span> Mantenimiento (±4d)
+              </div>
             </div>
           </div>
 
