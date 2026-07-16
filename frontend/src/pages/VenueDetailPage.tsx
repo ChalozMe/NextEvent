@@ -420,15 +420,13 @@ const VenueDetailPage = () => {
               {reserving ? "Reservando..." : startDateStr ? `📅 Confirmar Reserva (${startDateStr}${endDateStr && endDateStr !== startDateStr ? ` a ${endDateStr}` : ''})` : "📅 Reservar este lugar"}
             </button>
             <div className="secondary-actions" style={{ marginTop: '0.5rem' }}>
-              <button className="btn-secondary-full">
-                💬 Consultar disponibilidad
-              </button>
               <button 
                 className={`btn-icon-square ${isFavorite ? 'active' : ''}`}
+                style={{ width: '100%' }}
                 onClick={toggleFavorite}
                 title={isFavorite ? "Quitar de favoritos" : "Guardar en favoritos"}
               >
-                {isFavorite ? '♥' : '♡'}
+                {isFavorite ? '♥ Guardado en favoritos' : '♡ Agregar a favoritos'}
               </button>
             </div>
           </div>
