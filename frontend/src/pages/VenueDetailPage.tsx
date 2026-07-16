@@ -9,6 +9,12 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
+// Helper to parse 'YYYY-MM-DD' into local midnight Date to avoid UTC timezone off-by-one errors
+const parseLocalDate = (dateStr: string): Date => {
+  const parts = dateStr.split('-').map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+};
+
 const VenueDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [venue, setVenue] = useState<Venue | null>(null);
@@ -161,8 +167,8 @@ const VenueDetailPage = () => {
         setEndDateStr(null);
       } else {
         // Validate if all days between startDateStr and dayObj.dateStr are available
-        const s = new Date(startDateStr);
-        const e = new Date(dayObj.dateStr);
+        const s = parseLocalDate(startDateStr);
+        const e = parseLocalDate(dayObj.dateStr);
         let valid = true;
 
         for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
@@ -212,7 +218,9 @@ const VenueDetailPage = () => {
 
     try {
       await venueService.createVenueReservation(id, startDateStr, finalEnd);
-      const daysCount = Math.round((new Date(finalEnd).getTime() - new Date(startDateStr).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const s = parseLocalDate(startDateStr);
+      const e = parseLocalDate(finalEnd);
+      const daysCount = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       
       setResSuccessMsg(`¡Reserva confirmada del ${startDateStr} al ${finalEnd} (${daysCount} ${daysCount === 1 ? 'día' : 'días'})! Se han bloqueado 4 días antes y 4 días después por mantenimiento y limpieza.`);
       setStartDateStr(null);
@@ -250,7 +258,9 @@ const VenueDetailPage = () => {
   const getSelectedRangeText = () => {
     if (!startDateStr) return 'Selecciona una fecha de inicio y fin disponible en el calendario.';
     if (!endDateStr || startDateStr === endDateStr) return `Fecha seleccionada: ${startDateStr} (1 día)`;
-    const count = Math.round((new Date(endDateStr).getTime() - new Date(startDateStr).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const s = parseLocalDate(startDateStr);
+    const e = parseLocalDate(endDateStr);
+    const count = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     return `Rango seleccionado: ${startDateStr} a ${endDateStr} (${count} días)`;
   };
 
