@@ -13,7 +13,9 @@ const galleryPool = [
 ];
 
 export interface VenueReservationData {
-  reservedDate: string; // YYYY-MM-DD
+  startDate: string;
+  endDate: string;
+  reservedDates: string[];
   bufferBeforeDates: string[];
   bufferAfterDates: string[];
   status: string;
@@ -97,13 +99,16 @@ export const venueService = {
     return response.json();
   },
 
-  async createVenueReservation(venueId: string, date: string): Promise<VenueReservationData> {
+  async createVenueReservation(venueId: string, startDate: string, endDate?: string): Promise<VenueReservationData> {
     const response = await fetch(`${API_URL}/${venueId}/reservations`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ date })
+      body: JSON.stringify({
+        startDate,
+        endDate: endDate || startDate
+      })
     });
 
     if (!response.ok) {

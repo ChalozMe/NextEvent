@@ -7,7 +7,6 @@ import com.is3.eventmanager.repository.VenueReservationRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,58 +26,95 @@ public class VenueReservationService {
         List<ReservationResponse> responses = new ArrayList<>();
 
         for (VenueReservation res : reservations) {
-            LocalDate reservedDate = res.getStartDate().toLocalDate();
-            String dateStr = reservedDate.format(DATE_FORMATTER);
+            LocalDate startDate = res.getStartDate().toLocalDate();
+            LocalDate endDate = res.getEndDate().toLocalDate();
+
+            List<String> reservedDates = new ArrayList<>();
+            LocalDate curr = startDate;
+            while (!curr.isAfter(endDate)) {
+                reservedDates.add(curr.format(DATE_FORMATTER));
+                curr = curr.plusDays(1);
+            }
 
             List<String> beforeDates = new ArrayList<>();
             for (int i = 4; i >= 1; i--) {
-                beforeDates.add(reservedDate.minusDays(i).format(DATE_FORMATTER));
+                beforeDates.add(startDate.minusDays(i).format(DATE_FORMATTER));
             }
 
             List<String> afterDates = new ArrayList<>();
             for (int i = 1; i <= 4; i++) {
-                afterDates.add(reservedDate.plusDays(i).format(DATE_FORMATTER));
+                afterDates.add(endDate.plusDays(i).format(DATE_FORMATTER));
             }
 
-            responses.add(new ReservationResponse(dateStr, beforeDates, afterDates, res.getStatus()));
+            responses.add(new ReservationResponse(
+                    startDate.format(DATE_FORMATTER),
+                    endDate.format(DATE_FORMATTER),
+                    reservedDates,
+                    beforeDates,
+                    afterDates,
+                    res.getStatus()
+            ));
         }
 
         return responses;
     }
 
     public ReservationResponse createReservation(Long venueId, ReservationRequest request) {
-        LocalDate requestDate = LocalDate.parse(request.getDate(), DATE_FORMATTER);
+        LocalDate reqStart = LocalDate.parse(request.getStartDate(), DATE_FORMATTER);
+        LocalDate reqEnd = LocalDate.parse(request.getEndDate(), DATE_FORMATTER);
 
-        // Check if date or date within 4 days before/after existing reservations is blocked
+        if (reqEnd.isBefore(reqStart)) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio.");
+        }
+
+        // Check if any date in requested range [reqStart, reqEnd] overlaps with blocked range [S_exist - 4, E_exist + 4]
         List<ReservationResponse> existing = getReservationsByVenue(venueId);
         for (ReservationResponse res : existing) {
-            LocalDate reservedDate = LocalDate.parse(res.getReservedDate(), DATE_FORMATTER);
-            long daysDiff = Math.abs(requestDate.toEpochDay() - reservedDate.toEpochDay());
+            LocalDate existStart = LocalDate.parse(res.getStartDate(), DATE_FORMATTER);
+            LocalDate existEnd = LocalDate.parse(res.getEndDate(), DATE_FORMATTER);
 
-            if (daysDiff <= 4) {
-                throw new IllegalArgumentException("La fecha seleccionada no está disponible debido a una reserva existente o mantenimiento/limpieza (4 días antes/después).");
+            LocalDate blockedStart = existStart.minusDays(4);
+            LocalDate blockedEnd = existEnd.plusDays(4);
+
+            // Check overlap between [reqStart, reqEnd] and [blockedStart, blockedEnd]
+            if (!reqEnd.isBefore(blockedStart) && !reqStart.isAfter(blockedEnd)) {
+                throw new IllegalArgumentException("El rango de fechas seleccionado no está disponible debido a una reserva existente o período de mantenimiento/limpieza (4 días antes/después).");
             }
         }
 
         VenueReservation reservation = new VenueReservation();
         reservation.setVenueId(venueId);
         reservation.setEventId(request.getEventId());
-        reservation.setStartDate(requestDate.atStartOfDay());
-        reservation.setEndDate(requestDate.atTime(23, 59, 59));
+        reservation.setStartDate(reqStart.atStartOfDay());
+        reservation.setEndDate(reqEnd.atTime(23, 59, 59));
         reservation.setStatus("RESERVED");
 
         reservationRepository.save(reservation);
 
+        List<String> reservedDates = new ArrayList<>();
+        LocalDate curr = reqStart;
+        while (!curr.isAfter(reqEnd)) {
+            reservedDates.add(curr.format(DATE_FORMATTER));
+            curr = curr.plusDays(1);
+        }
+
         List<String> beforeDates = new ArrayList<>();
         for (int i = 4; i >= 1; i--) {
-            beforeDates.add(requestDate.minusDays(i).format(DATE_FORMATTER));
+            beforeDates.add(reqStart.minusDays(i).format(DATE_FORMATTER));
         }
 
         List<String> afterDates = new ArrayList<>();
         for (int i = 1; i <= 4; i++) {
-            afterDates.add(requestDate.plusDays(i).format(DATE_FORMATTER));
+            afterDates.add(reqEnd.plusDays(i).format(DATE_FORMATTER));
         }
 
-        return new ReservationResponse(request.getDate(), beforeDates, afterDates, "RESERVED");
+        return new ReservationResponse(
+                reqStart.format(DATE_FORMATTER),
+                reqEnd.format(DATE_FORMATTER),
+                reservedDates,
+                beforeDates,
+                afterDates,
+                "RESERVED"
+        );
     }
 }

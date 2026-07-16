@@ -18,7 +18,9 @@ const VenueDetailPage = () => {
 
   // Calendar State (Default: July 2025)
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1));
-  const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
+  const [startDateStr, setStartDateStr] = useState<string | null>(null);
+  const [endDateStr, setEndDateStr] = useState<string | null>(null);
+
   const [reserving, setReserving] = useState(false);
   const [resSuccessMsg, setResSuccessMsg] = useState<string | null>(null);
   const [resErrorMsg, setResErrorMsg] = useState<string | null>(null);
@@ -86,7 +88,7 @@ const VenueDetailPage = () => {
   // Check status of date: 'RESERVADO' | 'MANTENIMIENTO' | 'DISPONIBLE'
   const getDateStatus = (dateStr: string) => {
     for (const res of reservations) {
-      if (res.reservedDate === dateStr) {
+      if (res.reservedDates.includes(dateStr)) {
         return 'RESERVADO';
       }
       if (res.bufferBeforeDates.includes(dateStr) || res.bufferAfterDates.includes(dateStr)) {
@@ -134,22 +136,69 @@ const VenueDetailPage = () => {
 
   const handleDayClick = (dayObj: { isOtherMonth: boolean; dateStr: string; status: string }) => {
     if (dayObj.isOtherMonth) return;
+
     if (dayObj.status === 'RESERVADO') {
       alert("Esta fecha ya se encuentra RESERVADA por otro evento.");
       return;
     }
     if (dayObj.status === 'MANTENIMIENTO') {
-      alert("Esta fecha está BLOQUEADA por mantenimiento, limpieza y acondicionamiento del local (4 días antes/después de un evento).");
+      alert("Esta fecha está BLOQUEADA por mantenimiento, limpieza y acondicionamiento del local (4 días antes/después).");
       return;
     }
-    setSelectedDateStr(dayObj.dateStr);
+
     setResErrorMsg(null);
     setResSuccessMsg(null);
+
+    // Range selection logic
+    if (!startDateStr || (startDateStr && endDateStr)) {
+      // First click: Start date
+      setStartDateStr(dayObj.dateStr);
+      setEndDateStr(null);
+    } else {
+      // Second click: End date
+      if (dayObj.dateStr < startDateStr) {
+        setStartDateStr(dayObj.dateStr);
+        setEndDateStr(null);
+      } else {
+        // Validate if all days between startDateStr and dayObj.dateStr are available
+        const s = new Date(startDateStr);
+        const e = new Date(dayObj.dateStr);
+        let valid = true;
+
+        for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          const checkStr = `${y}-${m}-${day}`;
+
+          if (getDateStatus(checkStr) !== 'DISPONIBLE') {
+            valid = false;
+            break;
+          }
+        }
+
+        if (!valid) {
+          alert("El rango seleccionado incluye fechas reservadas o bloqueadas por mantenimiento.");
+          setStartDateStr(dayObj.dateStr);
+          setEndDateStr(null);
+        } else {
+          setEndDateStr(dayObj.dateStr);
+        }
+      }
+    }
+  };
+
+  const isDaySelected = (dateStr: string) => {
+    if (!startDateStr) return false;
+    if (startDateStr === dateStr) return true;
+    if (endDateStr === dateStr) return true;
+    if (endDateStr && dateStr > startDateStr && dateStr < endDateStr) return true;
+    return false;
   };
 
   const handleMakeReservation = async () => {
-    if (!selectedDateStr) {
-      alert("Por favor, selecciona primero un día disponible (en verde) en el calendario.");
+    if (!startDateStr) {
+      alert("Por favor, selecciona primero una fecha o rango de fechas disponible (en verde) en el calendario.");
       return;
     }
 
@@ -159,10 +208,15 @@ const VenueDetailPage = () => {
     setResErrorMsg(null);
     setResSuccessMsg(null);
 
+    const finalEnd = endDateStr || startDateStr;
+
     try {
-      await venueService.createVenueReservation(id, selectedDateStr);
-      setResSuccessMsg(`¡Reserva confirmada para el ${selectedDateStr}! Se han bloqueado 4 días antes y 4 días después por mantenimiento y limpieza.`);
-      setSelectedDateStr(null);
+      await venueService.createVenueReservation(id, startDateStr, finalEnd);
+      const daysCount = Math.round((new Date(finalEnd).getTime() - new Date(startDateStr).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      
+      setResSuccessMsg(`¡Reserva confirmada del ${startDateStr} al ${finalEnd} (${daysCount} ${daysCount === 1 ? 'día' : 'días'})! Se han bloqueado 4 días antes y 4 días después por mantenimiento y limpieza.`);
+      setStartDateStr(null);
+      setEndDateStr(null);
       await fetchReservations(id);
     } catch (err: any) {
       setResErrorMsg(err.message || "No se pudo completar la reserva");
@@ -191,6 +245,14 @@ const VenueDetailPage = () => {
   }
 
   const calendarDays = buildCalendarDays();
+
+  // Helper text for selected range
+  const getSelectedRangeText = () => {
+    if (!startDateStr) return 'Selecciona una fecha de inicio y fin disponible en el calendario.';
+    if (!endDateStr || startDateStr === endDateStr) return `Fecha seleccionada: ${startDateStr} (1 día)`;
+    const count = Math.round((new Date(endDateStr).getTime() - new Date(startDateStr).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    return `Rango seleccionado: ${startDateStr} a ${endDateStr} (${count} días)`;
+  };
 
   return (
     <div className="venue-detail-container">
@@ -328,10 +390,8 @@ const VenueDetailPage = () => {
               <span className="pricing-suffix">desde</span>
             </div>
             <div className="pricing-amount">S/ {venue.price.toLocaleString()}</div>
-            <p className="pricing-note">
-              {selectedDateStr 
-                ? `Fecha seleccionada: ${selectedDateStr}` 
-                : 'Selecciona una fecha disponible (en verde) en el calendario.'}
+            <p className="pricing-note" style={{ fontWeight: startDateStr ? '600' : 'normal', color: startDateStr ? '#4338CA' : '#64748B' }}>
+              {getSelectedRangeText()}
             </p>
 
             {resSuccessMsg && (
@@ -347,7 +407,7 @@ const VenueDetailPage = () => {
             )}
 
             <button className="btn-primary-full" onClick={handleMakeReservation} disabled={reserving}>
-              {reserving ? "Reservando..." : selectedDateStr ? `📅 Confirmar Reserva (${selectedDateStr})` : "📅 Reservar este lugar"}
+              {reserving ? "Reservando..." : startDateStr ? `📅 Confirmar Reserva (${startDateStr}${endDateStr && endDateStr !== startDateStr ? ` a ${endDateStr}` : ''})` : "📅 Reservar este lugar"}
             </button>
             <div className="secondary-actions" style={{ marginTop: '0.5rem' }}>
               <button className="btn-secondary-full">
@@ -365,7 +425,7 @@ const VenueDetailPage = () => {
 
           {/* Interactive Calendar Card */}
           <div className="sidebar-card calendar-card">
-            <h3>Calendario de Disponibilidad</h3>
+            <h3>Calendario de Disponibilidad (Rango)</h3>
             <div className="calendar-month-nav">
               <button className="calendar-nav-btn" onClick={prevMonth}>‹</button>
               <span>{MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
@@ -390,22 +450,22 @@ const VenueDetailPage = () => {
                   );
                 }
 
-                const isSelected = selectedDateStr === dayObj.dateStr;
+                const selected = isDaySelected(dayObj.dateStr);
                 let statusClass = 'disponible';
-                let dayTitle = 'Disponible para reservar';
+                let dayTitle = 'Disponible para reservar (Haz clic para seleccionar rango)';
 
                 if (dayObj.status === 'RESERVADO') {
                   statusClass = 'reservado';
                   dayTitle = 'Reservado por evento';
                 } else if (dayObj.status === 'MANTENIMIENTO') {
                   statusClass = 'mantenimiento';
-                  dayTitle = 'Bloqueado por mantenimiento/limpieza (4 días antes/después)';
+                  dayTitle = 'Bloqueado por mantenimiento/limpieza (4 días antes del inicio / 4 días después del fin)';
                 }
 
                 return (
                   <div
                     key={index}
-                    className={`calendar-day ${statusClass} ${isSelected ? 'selected' : ''}`}
+                    className={`calendar-day ${statusClass} ${selected ? 'selected' : ''}`}
                     onClick={() => handleDayClick(dayObj)}
                     title={dayTitle}
                   >
@@ -419,10 +479,10 @@ const VenueDetailPage = () => {
               <div className="legend-item" title="Día libre para reservar">
                 <span className="legend-dot disponible"></span> Disponible
               </div>
-              <div className="legend-item" title="Día reservado por evento">
+              <div className="legend-item" title="Días reservados por evento">
                 <span className="legend-dot reservado"></span> Reservado
               </div>
-              <div className="legend-item" title="4 días antes y después por mantenimiento/limpieza">
+              <div className="legend-item" title="4 días antes del inicio y 4 días después del fin de la reserva">
                 <span className="legend-dot mantenimiento"></span> Mantenimiento (±4d)
               </div>
             </div>
