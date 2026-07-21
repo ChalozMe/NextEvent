@@ -11,6 +11,7 @@ const DashboardPage = () => {
 
   const [events, setEvents] = useState<NexEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<NexEvent | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -20,17 +21,46 @@ const DashboardPage = () => {
 
       if (data.length > 0) {
           setSelectedEvent(data[0]);
-        }
+      }
       } catch (error) {
         console.error(error);
+      } finally {
+      setLoading(false);
       }
     };
 
     loadEvents();
   }, []);
 
-  if (!selectedEvent) {
+  if (loading) {
     return <p>Cargando eventos...</p>;
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="dashboard-container">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "70vh",
+            gap: "1rem",
+          }}
+        >
+        <h2>Aún no tienes eventos</h2>
+
+        <p>
+          Crea tu primer evento para comenzar a planificar.
+        </p>
+
+        <button className="btn-new-event">
+          + Nuevo Evento
+        </button>
+        </div>
+      </div>
+    );
   }
 
   return (
