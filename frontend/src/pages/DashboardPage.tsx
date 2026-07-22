@@ -185,7 +185,21 @@ const DashboardPage = () => {
             <div className="event-summary">
               <div className="event-details">
                 <div className="event-image">
-                  <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Boda" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem'}} />
+                  
+                  <img
+                    src={
+                      selectedEvent.coverImage ||
+                      "https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                    }
+                    alt={selectedEvent.name}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "0.5rem",
+                    }}
+                  />
+
                 </div>
                 <div className="event-info">
                   <h3>{selectedEvent.name}</h3>

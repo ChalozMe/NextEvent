@@ -45,16 +45,22 @@ export const eventService = {
     const events = await response.json();
     return events.map((event: any) => ({
       id: event.id.toString(),
-      name: event.type,
+
+      name: event.name,
       type: event.type.toLowerCase(),
+      
       date: event.eventDate,
+      
       capacity: event.capacity,
 
-      budget: 0,
-      budgetUsed: 0,
-      status: "activo",
-      location: "LugarTest",
-      description: "TestDescript",
+      budget: Number(event.budget ?? 0),
+      budgetUsed: Number(event.budgetUsed ?? 0),
+
+      status: event.status,
+      location: event.location,
+      description: event.description,
+
+      coverImage: event.coverImage,
 
       guestsConfirmed: 0,
       guestsTotal: event.capacity,

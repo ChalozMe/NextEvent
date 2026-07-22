@@ -45,6 +45,7 @@ export interface NexEvent {
   guestsTotal: number;
   tasksCompleted: number;
   tasksTotal: number;
+  coverImage?: string;
 }
 
 // ===== Chronogram Types =====
