@@ -1,37 +1,25 @@
 package com.is3.eventmanager.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 public class EventRequest {
 
+    private String name;
     private String type;
     private LocalDateTime eventDate;
     private Integer capacity;
 
-    public EventRequest() {
-    }
+    private String location;
+    private String description;
 
-    public String getType() {
-        return type;
-    }
+    private BigDecimal budget;
 
-    public LocalDateTime getEventDate() {
-        return eventDate;
-    }
-
-    public Integer getCapacity() {
-        return capacity;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setEventDate(LocalDateTime eventDate) {
-        this.eventDate = eventDate;
-    }
-
-    public void setCapacity(Integer capacity) {
-        this.capacity = capacity;
-    }
+    private String coverImage;
+    private String status;
 }

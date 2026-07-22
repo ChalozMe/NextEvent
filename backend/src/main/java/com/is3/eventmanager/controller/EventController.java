@@ -19,13 +19,15 @@ public class EventController {
         this.eventService = eventService;
     }
 
-    @PostMapping
-    public String createEvent(@RequestBody EventRequest request) {
+  @PostMapping
+  public String createEvent(
+      @RequestBody EventRequest request,
+      Authentication authentication) {
 
-        eventService.create(request);
+        eventService.create(request, authentication.getName());
 
         return "Event created";
-    }
+      }
 
     @GetMapping
     public List<Event> getEvents(Authentication authentication) {

@@ -123,3 +123,14 @@ export interface GuestEventSummary {
   date: string;
   location: string;
 }
+
+export interface CreateEventRequest {
+  name: string;
+  type: string;
+  eventDate: string;
+  capacity: number;
+  location: string;
+  description: string;
+  status: string;
+  budget: number;
+}

@@ -1,11 +1,13 @@
 import { useAuth } from '../context/AuthContext';
 import './DashboardPage.css';
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { eventService } from "../services/eventService";
 import type { NexEvent } from "../types";
 
 const DashboardPage = () => {
   
+  const navigate = useNavigate();
 
   const { user } = useAuth();
 
@@ -55,8 +57,11 @@ const DashboardPage = () => {
           Crea tu primer evento para comenzar a planificar.
         </p>
 
-        <button className="btn-new-event">
-          + Nuevo Evento
+        <button
+        className="btn-new-event"
+        onClick={() => navigate("/events/new")}
+        >
+        <span>+</span> Nuevo Evento
         </button>
         </div>
       </div>

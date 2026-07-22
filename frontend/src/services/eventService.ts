@@ -1,8 +1,32 @@
 import type { NexEvent } from "../types";
+import type { CreateEventRequest } from "../types";
 
 const API_URL = "http://localhost:8080/api/events";
 
 export const eventService = {
+
+
+
+  async createEvent(data: CreateEventRequest): Promise<void> {
+
+    const token = localStorage.getItem("nexevent_token");
+
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error("No se pudo crear el evento");
+    }
+  },
+
+
+
 
   async getEvents(): Promise<NexEvent[]> {
 

@@ -8,9 +8,13 @@ import com.is3.eventmanager.repository.UserEventRepository;
 import com.is3.eventmanager.dto.EventRequest;
 import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.repository.EventRepository;
+
+
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
+
 
 @Service
 public class EventService {
@@ -25,15 +29,36 @@ public class EventService {
         this.userEventRepository = userEventRepository;
     }
 
-    public void create(EventRequest request) {
+    public void create(EventRequest request, String email) {
+      Event event = new Event();
 
-        Event event = new Event();
+      event.setName(request.getName());
+      event.setType(request.getType());
+      event.setEventDate(request.getEventDate());
+      event.setCapacity(request.getCapacity());
 
-        event.setType(request.getType());
-        event.setEventDate(request.getEventDate());
-        event.setCapacity(request.getCapacity());
+      event.setLocation(request.getLocation());
+      event.setDescription(request.getDescription());
 
-        eventRepository.save(event);
+      event.setStatus(request.getStatus());
+
+      event.setBudget(request.getBudget());
+      event.setBudgetUsed(BigDecimal.ZERO);
+
+      event.setCoverImage(null);
+
+      eventRepository.save(event);
+      
+      User user = userRepository.findByEmail(email)
+        .orElseThrow();
+
+      UserEvent userEvent = new UserEvent();
+      userEvent.setUser(user);
+      userEvent.setEvent(event);
+      userEvent.setRole("OWNER");
+      userEvent.setJoinedAt(LocalDateTime.now());
+
+      userEventRepository.save(userEvent);
     }
 
     public List<Event> getAllEvents() {
