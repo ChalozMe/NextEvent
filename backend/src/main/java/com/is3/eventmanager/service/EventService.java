@@ -8,9 +8,17 @@ import com.is3.eventmanager.repository.UserEventRepository;
 import com.is3.eventmanager.dto.EventRequest;
 import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.repository.EventRepository;
+
+//task added
+import com.is3.eventmanager.entity.Task;
+import com.is3.eventmanager.service.TaskTemplateService;
+import com.is3.eventmanager.repository.TaskRepository;
+
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
+
 
 @Service
 public class EventService {
@@ -19,26 +27,57 @@ public class EventService {
     private final UserRepository userRepository;
     private final UserEventRepository userEventRepository;
 
-    public EventService(EventRepository eventRepository, UserRepository userRepository, UserEventRepository userEventRepository) {
-        this.eventRepository = eventRepository;
-        this.userRepository = userRepository;
-        this.userEventRepository = userEventRepository;
+    private final TaskRepository taskRepository;
+    private final TaskTemplateService taskTemplateService;
+
+    public EventService(
+        EventRepository eventRepository,
+        UserRepository userRepository,
+        UserEventRepository userEventRepository,
+        TaskRepository taskRepository,
+        TaskTemplateService taskTemplateService) {
+
+      this.eventRepository = eventRepository;
+      this.userRepository = userRepository;
+      this.userEventRepository = userEventRepository;
+      this.taskRepository = taskRepository;
+      this.taskTemplateService = taskTemplateService;
     }
 
-    public void create(EventRequest request) {
+    public void create(EventRequest request, String email) {
 
-        Event event = new Event();
+      User user = userRepository.findByEmail(email).orElseThrow();
 
-        event.setType(request.getType());
-        event.setEventDate(request.getEventDate());
-        event.setCapacity(request.getCapacity());
+      Event event = new Event();
 
-        eventRepository.save(event);
-    }
+      event.setName(request.getName());
+      event.setType(request.getType());
+      event.setEventDate(request.getEventDate());
+      event.setCapacity(request.getCapacity());
 
+      event.setLocation(request.getLocation());
+      event.setDescription(request.getDescription());
 
-    public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+      event.setStatus(request.getStatus());
+
+      event.setBudget(request.getBudget());
+      event.setBudgetUsed(BigDecimal.ZERO);
+
+      event.setCoverImage(null);
+
+      event = eventRepository.save(event);
+
+      UserEvent userEvent = new UserEvent();
+      userEvent.setUser(user);
+      userEvent.setEvent(event);
+      userEvent.setRole("OWNER");
+      userEvent.setJoinedAt(LocalDateTime.now());
+
+      userEventRepository.save(userEvent);
+
+      for (Task task : taskTemplateService.generate(event)) {
+        taskRepository.save(task);
+      }
     }
 
     public void joinEvent(Long eventId, Long userId) {
@@ -61,5 +100,16 @@ public class EventService {
 
     public List<UserEvent> getParticipants(Long eventId) {
       return userEventRepository.findByEventId(eventId);
+    }
+
+    public List<Event> getEventsByUser(String email) {
+      List<UserEvent> userEvents = userEventRepository.findByUserEmail(email);
+      return userEvents.stream()
+        .map(UserEvent::getEvent)
+        .toList();
+    }
+
+    public List<Task> getTasks(Long eventId) {
+     return taskRepository.findByEventIdOrderByDueDateAsc(eventId);
     }
 }

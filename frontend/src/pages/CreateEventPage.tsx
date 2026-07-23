@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { eventService } from "../services/eventService";
+import type { CreateEventRequest } from "../types";
 import './CreateEventPage.css';
 
 type EventType = 'Boda' | 'Quinceañero' | 'Empresarial';
@@ -10,11 +12,34 @@ const CreateEventPage = () => {
   const [date, setDate] = useState('2025-07-20');
   const [capacity, setCapacity] = useState('200');
   const [budget, setBudget] = useState('7000.00');
+  
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [description, setDescription] = useState("");
+  const [coverImage, setCoverImage] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    alert('¡Evento creado exitosamente! (Demo)');
-    navigate('/');
+
+    const event: CreateEventRequest = {
+      name,
+      type: eventType,
+      eventDate: `${date}T18:00:00`,
+      capacity: Number(capacity),
+      location,
+      description,
+      status: "activo",
+      budget: Number(budget),
+      coverImage
+    };
+
+    try {
+      await eventService.createEvent(event);
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      alert("No se pudo crear el evento");
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -70,7 +95,22 @@ const CreateEventPage = () => {
           
           <div className="form-group-custom">
             <label className="form-label-custom">Tipo de evento *</label>
-            <span className="form-hint">Selecciona el tipo de evento que estás organizando.</span>
+            <span className="form-hint">
+              Nombre que aparecerá el sistema.
+            </span>
+
+            <div className="input-with-icon">
+              <span className="input-icon-left">📝</span>
+
+              <input
+                type="text"
+                className="input-custom"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Personalizame"
+                required
+              />
+            </div>
             
             <div className="type-cards">
               <label className={`type-card ${eventType === 'Boda' ? 'selected' : ''}`}>
@@ -166,7 +206,63 @@ const CreateEventPage = () => {
                 />
               </div>
             </div>
+
+            <div className="form-group-custom">
+              <label className="form-label-custom">
+                Ubicación
+              </label>
+
+              <span className="form-hint">
+                Lugar donde se realizará el evento.
+              </span>
+
+              <div className="input-with-icon">
+                <span className="input-icon-left">📍</span>
+
+              <input
+                type="text"
+                className="input-custom"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Centro de Convenciones..."
+              />
+              </div>
+            </div>
+
+            <div className="form-group-custom">
+              <label className="form-label-custom">
+                Descripción
+              </label>
+
+              <textarea
+                className="input-custom"
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe brevemente el evento..."
+              />
+            </div>
           </div>
+
+          <div className="form-group-custom">
+            <label className="form-label-custom">
+              Imagen de portada
+            </label>
+
+            <div className="input-with-icon">
+              <span className="input-icon-left">🖼️</span>
+
+              <input
+                type="url"
+                className="input-custom"
+                value={coverImage}
+                onChange={(e) => setCoverImage(e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+
+
 
           <div className="info-box">
             <span>ℹ️</span> Al guardar, este evento quedará asociado a tu cuenta como organizador.
@@ -194,6 +290,17 @@ const CreateEventPage = () => {
           </div>
 
           <div className="preview-details">
+
+            <div className="preview-item">
+              <span className="preview-item-label">
+                📝 Nombre
+              </span>
+
+              <span className="preview-item-value">
+                {name || "Sin nombre"}
+              </span>
+            </div>
+
             <div className="preview-item">
               <span className="preview-item-label"><span>♥</span> Tipo de evento</span>
               <span className="preview-item-value">{eventType}</span>
@@ -209,6 +316,16 @@ const CreateEventPage = () => {
             <div className="preview-item">
               <span className="preview-item-label"><span>$</span> Presupuesto estimado</span>
               <span className="preview-item-value">{formatCurrency(budget)}</span>
+            </div>
+
+            <div className="preview-item">
+              <span className="preview-item-label">
+                📍 Ubicación
+              </span>
+
+              <span className="preview-item-value">
+                {location || "Sin definir"}
+              </span>
             </div>
           </div>
 
