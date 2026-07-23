@@ -1,0 +1,13 @@
+$kind: http-request
+name: http://localhost:8080/api/events/{eventId}/join
+url: http://localhost:8080/api/events/{{EVENT_ID}}/join
+method: POST
+headers:
+  - key: "Authorization"
+    value: "Bearer {{JWT_TOKEN}}"
+  - key: "Content-Type"
+    value: "application/json"
+body:
+  type: json
+  content: "{\n    \"userId\": 1\n}"
+order: 3724975298469071
