@@ -15,6 +15,35 @@ const DashboardPage = () => {
   const [selectedEvent, setSelectedEvent] = useState<NexEvent | null>(null);
   const [loading, setLoading] = useState(true);
 
+  //calcs to data
+  const budgetPercent = selectedEvent && selectedEvent.budget > 0
+    ? Math.round((selectedEvent.budgetUsed / selectedEvent.budget) * 100)
+    : 0;
+
+  const daysRemaining = selectedEvent
+    ? Math.max(
+    0,
+    Math.ceil(
+      (new Date(selectedEvent.date).getTime() - Date.now()) /
+        (1000 * 60 * 60 * 24)
+    )
+  )
+  : 0;
+
+  const guestPercent =
+    selectedEvent && selectedEvent.guestsTotal > 0
+      ? Math.round(
+        (selectedEvent.guestsConfirmed / selectedEvent.guestsTotal) * 100
+      )
+    : 0;
+
+  const taskPercent =
+    selectedEvent && selectedEvent.tasksTotal > 0
+      ? Math.round(
+        (selectedEvent.tasksCompleted / selectedEvent.tasksTotal) * 100
+      )
+    : 0;
+
   useEffect(() => {
     const loadEvents = async () => {
       try {
@@ -73,7 +102,7 @@ const DashboardPage = () => {
       {/* HEADER */}
       <header className="dashboard-header">
         <div className="dashboard-header__welcome">
-          <h1>¡Bienvenida, {user?.fullName || 'María'}! 👋</h1>
+          <h1>¡Que gusto verte, {user?.fullName || 'María'}! 👋</h1>
           <p>Aquí tienes el resumen de tu evento.</p>
         </div>
         <div className="dashboard-header__actions">
@@ -111,11 +140,11 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">68%</div>
+          <div className="kpi-value">{taskPercent}%</div>
           <div className="kpi-footer">
             <span>{selectedEvent.tasksCompleted} de {selectedEvent.tasksTotal} tareas</span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--purple" style={{ width: '68%' }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--purple" style={{ width: `${taskPercent}%` }}></div>
             </div>
           </div>
         </div>
@@ -133,7 +162,7 @@ const DashboardPage = () => {
           <div className="kpi-footer">
             <span>de {selectedEvent.guestsTotal} invitados</span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--green" style={{ width: '76%' }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--green" style={{ width: `${guestPercent}%` }}></div>
             </div>
           </div>
         </div>
@@ -147,11 +176,11 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">45</div>
+          <div className="kpi-value">{daysRemaining}</div>
           <div className="kpi-footer">
             <span>para el evento</span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--orange" style={{ width: '45%' }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--orange" style={{ width: `${Math.min(daysRemaining, 100)}%` }}></div>
             </div>
           </div>
         </div>
@@ -165,11 +194,11 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">${selectedEvent.budgetUsed}</div>
+          <div className="kpi-value">${selectedEvent.budgetUsed.toLocaleString()}</div>
           <div className="kpi-footer">
-            <span>de ${selectedEvent.budget}</span>
+            <span>de ${selectedEvent.budget.toLocaleString()}</span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--blue" style={{ width: '65%' }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--blue" style={{ width: `${budgetPercent}%` }}></div>
             </div>
           </div>
         </div>
@@ -363,8 +392,8 @@ const DashboardPage = () => {
             <div className="budget-gauge-container">
               <div className="gauge-chart">
                 <div className="gauge-inner">
-                  <span className="gauge-amount">$4,560</span>
-                  <span className="gauge-total">de $7,000</span>
+                  <span className="gauge-amount">${selectedEvent.budgetUsed.toLocaleString()}</span>
+                  <span className="gauge-total">de ${selectedEvent.budget.toLocaleString()}</span>
                 </div>
               </div>
               <div className="budget-legend chart-legend">
@@ -372,13 +401,13 @@ const DashboardPage = () => {
                   <div className="legend-label">
                     <span className="dot dot--blue"></span> Gastado
                   </div>
-                  <span className="legend-value">$4,560</span>
+                  <span className="legend-value">${selectedEvent.budgetUsed.toLocaleString()}</span>
                 </div>
                 <div className="legend-item">
                   <div className="legend-label">
                     <span className="dot" style={{background: '#E2E8F0'}}></span> Restante
                   </div>
-                  <span className="legend-value">$2,440</span>
+                  <span className="legend-value">${(selectedEvent.budget - selectedEvent.budgetUsed).toLocaleString()}</span>
                 </div>
               </div>
             </div>
