@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { venueService, type VenueReservationData } from '../services/venueService';
-import type { Venue } from '../types';
+import { eventService } from '../services/eventService';
+import type { Venue, NexEvent } from '../types';
 import './VenueDetailPage.css';
 
 const MONTH_NAMES = [
@@ -19,6 +20,8 @@ const VenueDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [venue, setVenue] = useState<Venue | null>(null);
   const [reservations, setReservations] = useState<VenueReservationData[]>([]);
+  const [userEvents, setUserEvents] = useState<NexEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -41,13 +44,21 @@ const VenueDetailPage = () => {
   };
 
   useEffect(() => {
-    const fetchVenue = async () => {
+    const fetchVenueAndEvents = async () => {
       if (!id) return;
       setLoading(true);
       try {
-        const data = await venueService.getVenueById(id);
-        setVenue(data);
+        const venueData = await venueService.getVenueById(id);
+        setVenue(venueData);
         await fetchReservations(id);
+
+        // Fetch user events if logged in
+        try {
+          const eventsData = await eventService.getEvents();
+          setUserEvents(eventsData);
+        } catch (evtErr) {
+          console.warn("No se pudieron cargar los eventos del usuario o usuario no autenticado:", evtErr);
+        }
       } catch (err) {
         console.error("Error al obtener detalle del local:", err);
       } finally {
@@ -55,7 +66,7 @@ const VenueDetailPage = () => {
       }
     };
 
-    fetchVenue();
+    fetchVenueAndEvents();
 
     if (id) {
       const saved = localStorage.getItem('nexevent_favorite_venues');
@@ -217,14 +228,18 @@ const VenueDetailPage = () => {
     const finalEnd = endDateStr || startDateStr;
 
     try {
-      await venueService.createVenueReservation(id, startDateStr, finalEnd);
+      await venueService.createVenueReservation(id, startDateStr, finalEnd, selectedEventId || undefined);
       const s = parseLocalDate(startDateStr);
       const e = parseLocalDate(finalEnd);
       const daysCount = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       
-      setResSuccessMsg(`¡Reserva confirmada del ${startDateStr} al ${finalEnd} (${daysCount} ${daysCount === 1 ? 'día' : 'días'})! Se han bloqueado 4 días antes y 4 días después por mantenimiento y limpieza.`);
+      const associatedEvt = userEvents.find(evt => evt.id === selectedEventId);
+      const evtNameText = associatedEvt ? ` para "${associatedEvt.name}"` : '';
+
+      setResSuccessMsg(`¡Reserva confirmada del ${startDateStr} al ${finalEnd}${evtNameText} (${daysCount} ${daysCount === 1 ? 'día' : 'días'})! Se han bloqueado 4 días antes y 4 días después por mantenimiento y limpieza.`);
       setStartDateStr(null);
       setEndDateStr(null);
+      setSelectedEventId(null);
       await fetchReservations(id);
     } catch (err: any) {
       setResErrorMsg(err.message || "No se pudo completar la reserva");
@@ -403,6 +418,26 @@ const VenueDetailPage = () => {
             <p className="pricing-note" style={{ fontWeight: startDateStr ? '600' : 'normal', color: startDateStr ? '#4338CA' : '#64748B' }}>
               {getSelectedRangeText()}
             </p>
+
+            {/* Event Selector for Reservation */}
+            <div className="event-select-container" style={{ marginBottom: '1rem', textAlign: 'left' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1E293B', display: 'block', marginBottom: '0.35rem' }}>
+                🎉 Seleccionar evento del usuario:
+              </label>
+              <select
+                className="event-select"
+                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #E2E8F0', fontSize: '0.9rem', background: 'white', color: '#1E293B', cursor: 'pointer' }}
+                value={selectedEventId || ''}
+                onChange={(e) => setSelectedEventId(e.target.value)}
+              >
+                <option value="">-- Reserva sin evento asociado --</option>
+                {userEvents.map((evt) => (
+                  <option key={evt.id} value={evt.id}>
+                    🎉 {evt.name} ({evt.type}) - {evt.date}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {resSuccessMsg && (
               <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#065F46', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>

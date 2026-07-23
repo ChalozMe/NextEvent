@@ -99,7 +99,7 @@ export const venueService = {
     return response.json();
   },
 
-  async createVenueReservation(venueId: string, startDate: string, endDate?: string): Promise<VenueReservationData> {
+  async createVenueReservation(venueId: string, startDate: string, endDate?: string, eventId?: string): Promise<VenueReservationData> {
     const response = await fetch(`${API_URL}/${venueId}/reservations`, {
       method: "POST",
       headers: {
@@ -107,7 +107,8 @@ export const venueService = {
       },
       body: JSON.stringify({
         startDate,
-        endDate: endDate || startDate
+        endDate: endDate || startDate,
+        eventId: eventId ? parseInt(eventId, 10) : null
       })
     });
 
