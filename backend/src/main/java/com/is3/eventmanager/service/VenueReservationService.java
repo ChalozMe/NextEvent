@@ -63,6 +63,10 @@ public class VenueReservationService {
         LocalDate reqStart = LocalDate.parse(request.getStartDate(), DATE_FORMATTER);
         LocalDate reqEnd = LocalDate.parse(request.getEndDate(), DATE_FORMATTER);
 
+        if (request.getEventId() == null) {
+            throw new IllegalArgumentException("Es obligatorio asociar un evento registrado a la reserva del local.");
+        }
+
         if (reqEnd.isBefore(reqStart)) {
             throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio.");
         }

@@ -219,6 +219,12 @@ const VenueDetailPage = () => {
       return;
     }
 
+    if (!selectedEventId) {
+      setResErrorMsg("⚠️ Debes seleccionar obligatoriamente un evento registrado para reservar este local.");
+      alert("Debes seleccionar obligatoriamente un evento registrado de tu lista para realizar la reserva.");
+      return;
+    }
+
     if (!id) return;
 
     setReserving(true);
@@ -228,7 +234,7 @@ const VenueDetailPage = () => {
     const finalEnd = endDateStr || startDateStr;
 
     try {
-      await venueService.createVenueReservation(id, startDateStr, finalEnd, selectedEventId || undefined);
+      await venueService.createVenueReservation(id, startDateStr, finalEnd, selectedEventId);
       const s = parseLocalDate(startDateStr);
       const e = parseLocalDate(finalEnd);
       const daysCount = Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -419,24 +425,38 @@ const VenueDetailPage = () => {
               {getSelectedRangeText()}
             </p>
 
-            {/* Event Selector for Reservation */}
+            {/* Mandatory Event Selector for Reservation */}
             <div className="event-select-container" style={{ marginBottom: '1rem', textAlign: 'left' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: '600', color: '#1E293B', display: 'block', marginBottom: '0.35rem' }}>
-                🎉 Seleccionar evento del usuario:
+                🎉 Evento asociado (Obligatorio *):
               </label>
               <select
                 className="event-select"
-                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #E2E8F0', fontSize: '0.9rem', background: 'white', color: '#1E293B', cursor: 'pointer' }}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '0.5rem',
+                  border: selectedEventId ? '1px solid #10B981' : '1px solid #F59E0B',
+                  fontSize: '0.9rem',
+                  background: 'white',
+                  color: '#1E293B',
+                  cursor: 'pointer'
+                }}
                 value={selectedEventId || ''}
                 onChange={(e) => setSelectedEventId(e.target.value)}
               >
-                <option value="">-- Reserva sin evento asociado --</option>
+                <option value="">-- Selecciona tu evento obligatoriamente --</option>
                 {userEvents.map((evt) => (
                   <option key={evt.id} value={evt.id}>
                     🎉 {evt.name} ({evt.type}) - {evt.date}
                   </option>
                 ))}
               </select>
+              {userEvents.length === 0 && (
+                <p style={{ fontSize: '0.75rem', color: '#EF4444', marginTop: '0.35rem' }}>
+                  No tienes eventos creados aún. <Link to="/dashboard" style={{ color: '#6366F1', fontWeight: '600' }}>Crea un evento primero en tu Dashboard</Link>.
+                </p>
+              )}
             </div>
 
             {resSuccessMsg && (
