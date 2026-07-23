@@ -1,16 +1,53 @@
 import { useAuth } from '../context/AuthContext';
 import './DashboardPage.css';
 import { useEffect, useState } from "react";
-import { eventService } from "../services/eventService";
+import { useNavigate } from "react-router-dom";
+import { eventService, type EventTask } from "../services/eventService";
 import type { NexEvent } from "../types";
 
 const DashboardPage = () => {
   
+  const navigate = useNavigate();
 
   const { user } = useAuth();
 
   const [events, setEvents] = useState<NexEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<NexEvent | null>(null);
+  const [tasks, setTasks] = useState<EventTask[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  //calcs to data
+  const budgetPercent = selectedEvent && selectedEvent.budget > 0
+    ? Math.round((selectedEvent.budgetUsed / selectedEvent.budget) * 100)
+    : 0;
+
+  const daysRemaining = selectedEvent
+    ? Math.max(
+    0,
+    Math.ceil(
+      (new Date(selectedEvent.date).getTime() - Date.now()) /
+        (1000 * 60 * 60 * 24)
+    )
+  )
+  : 0;
+
+  const guestPercent =
+    selectedEvent && selectedEvent.guestsTotal > 0
+      ? Math.round(
+        (selectedEvent.guestsConfirmed / selectedEvent.guestsTotal) * 100
+      )
+    : 0;
+
+  const tasksCompleted = tasks.filter(
+    t => t.status === "COMPLETED"
+  ).length;
+
+  const tasksTotal = tasks.length;
+
+  const taskPercent =
+    tasksTotal > 0
+      ? Math.round((tasksCompleted / tasksTotal) * 100)
+      : 0;
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -20,17 +57,65 @@ const DashboardPage = () => {
 
       if (data.length > 0) {
           setSelectedEvent(data[0]);
-        }
+      }
       } catch (error) {
         console.error(error);
+      } finally {
+      setLoading(false);
       }
     };
 
     loadEvents();
   }, []);
 
-  if (!selectedEvent) {
+  useEffect(() => {
+    if (!selectedEvent) return;
+
+    const loadTasks = async () => {
+      try {
+        const data = await eventService.getTasks(selectedEvent.id);
+        setTasks(data);
+      } catch (err) {
+        console.error(err);
+        setTasks([]);
+      }
+    };
+
+    loadTasks();
+  }, [selectedEvent]);
+
+  if (loading) {
     return <p>Cargando eventos...</p>;
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="dashboard-container">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "70vh",
+            gap: "1rem",
+          }}
+        >
+        <h2>Aún no tienes eventos</h2>
+
+        <p>
+          Crea tu primer evento para comenzar a planificar.
+        </p>
+
+        <button
+        className="btn-new-event"
+        onClick={() => navigate("/events/new")}
+        >
+        <span>+</span> Nuevo Evento
+        </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -38,7 +123,7 @@ const DashboardPage = () => {
       {/* HEADER */}
       <header className="dashboard-header">
         <div className="dashboard-header__welcome">
-          <h1>¡Bienvenida, {user?.fullName || 'María'}! 👋</h1>
+          <h1>¡Que gusto verte, {user?.fullName || 'María'}! 👋</h1>
           <p>Aquí tienes el resumen de tu evento.</p>
         </div>
         <div className="dashboard-header__actions">
@@ -76,11 +161,11 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">68%</div>
+          <div className="kpi-value">{taskPercent}%</div>
           <div className="kpi-footer">
-            <span>{selectedEvent.tasksCompleted} de {selectedEvent.tasksTotal} tareas</span>
+            <span>{tasksCompleted} de {tasksTotal} tareas</span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--purple" style={{ width: '68%' }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--purple" style={{ width: `${taskPercent}%` }}></div>
             </div>
           </div>
         </div>
@@ -98,7 +183,7 @@ const DashboardPage = () => {
           <div className="kpi-footer">
             <span>de {selectedEvent.guestsTotal} invitados</span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--green" style={{ width: '76%' }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--green" style={{ width: `${guestPercent}%` }}></div>
             </div>
           </div>
         </div>
@@ -112,11 +197,11 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">45</div>
+          <div className="kpi-value">{daysRemaining}</div>
           <div className="kpi-footer">
             <span>para el evento</span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--orange" style={{ width: '45%' }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--orange" style={{ width: `${Math.min(daysRemaining, 100)}%` }}></div>
             </div>
           </div>
         </div>
@@ -130,11 +215,11 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">${selectedEvent.budgetUsed}</div>
+          <div className="kpi-value">${selectedEvent.budgetUsed.toLocaleString()}</div>
           <div className="kpi-footer">
-            <span>de ${selectedEvent.budget}</span>
+            <span>de ${selectedEvent.budget.toLocaleString()}</span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--blue" style={{ width: '65%' }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--blue" style={{ width: `${budgetPercent}%` }}></div>
             </div>
           </div>
         </div>
@@ -150,7 +235,21 @@ const DashboardPage = () => {
             <div className="event-summary">
               <div className="event-details">
                 <div className="event-image">
-                  <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" alt="Boda" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '0.5rem'}} />
+                  
+                  <img
+                    src={
+                      selectedEvent.coverImage ||
+                      "https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80"
+                    }
+                    alt={selectedEvent.name}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "0.5rem",
+                    }}
+                  />
+
                 </div>
                 <div className="event-info">
                   <h3>{selectedEvent.name}</h3>
@@ -261,50 +360,77 @@ const DashboardPage = () => {
               <a href="#" className="dash-card__link">Ver todas</a>
             </h2>
             <div className="task-list">
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" />
-                <div className="task-content">
-                  <div className="task-title">Confirmar menú con catering</div>
-                  <div className="task-priority priority-high">Alta prioridad</div>
+              {tasks.length === 0 ? (
+              <p>No hay tareas registradas.</p>
+              ) : (
+              tasks.slice(0, 5).map((task, index) => {
+              const completed = task.status === "COMPLETED";
+
+              const priorityClass =
+                task.priority === "HIGH"
+                ? "priority-high"
+                : task.priority === "LOW"
+                ? "priority-low"
+                : "priority-medium";
+
+              const priorityLabel =
+                completed
+                ? "Completada"
+                : task.priority === "HIGH"
+                ? "Alta prioridad"
+                : task.priority === "LOW"
+                ? "Baja prioridad"
+                : "Media prioridad";
+
+              return (
+              <div key={task.id}>
+                <div className="task-item">
+                  <input
+                    type="checkbox"
+                    className="task-checkbox"
+                    checked={completed}
+                    readOnly
+                  />
+
+              <div className="task-content">
+                <div
+                  className="task-title"
+                  style={
+                    completed
+                      ? {
+                        textDecoration: "line-through",
+                        color: "#94A3B8",
+                        }
+                      : undefined
+                  }
+                >
+                        {task.title}
+                      </div>
+
+                      <div className={`task-priority ${priorityClass}`}>
+                    {priorityLabel}
+                  </div>
                 </div>
-                <div className="task-date">15 May</div>
-              </div>
-              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" />
-                <div className="task-content">
-                  <div className="task-title">Enviar invitaciones digitales</div>
-                  <div className="task-priority priority-medium">Media prioridad</div>
+
+                <div className="task-date">
+                  {new Date(task.dueDate).toLocaleDateString("es-PE", {
+                    day: "2-digit",
+                    month: "short",
+                  })}
                 </div>
-                <div className="task-date">18 May</div>
               </div>
-              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" />
-                <div className="task-content">
-                  <div className="task-title">Reservar transporte</div>
-                  <div className="task-priority priority-medium">Media prioridad</div>
+                  {index < Math.min(tasks.length, 5) - 1 && (
+                  <hr
+                    style={{
+                    borderTop: "1px solid #F1F5F9",
+                    margin: "0",
+                    }}
+                  />
+                  )}
                 </div>
-                <div className="task-date">22 May</div>
-              </div>
-              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" />
-                <div className="task-content">
-                  <div className="task-title">Prueba de menú</div>
-                  <div className="task-priority priority-low">Baja prioridad</div>
-                </div>
-                <div className="task-date">25 May</div>
-              </div>
-              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" defaultChecked />
-                <div className="task-content">
-                  <div className="task-title" style={{textDecoration: 'line-through', color: '#94A3B8'}}>Confirmar decoración floral</div>
-                  <div className="task-priority priority-low">Completada</div>
-                </div>
-                <div className="task-date">10 May</div>
-              </div>
+                );
+              })
+            )}
             </div>
           </div>
 
@@ -314,8 +440,8 @@ const DashboardPage = () => {
             <div className="budget-gauge-container">
               <div className="gauge-chart">
                 <div className="gauge-inner">
-                  <span className="gauge-amount">$4,560</span>
-                  <span className="gauge-total">de $7,000</span>
+                  <span className="gauge-amount">${selectedEvent.budgetUsed.toLocaleString()}</span>
+                  <span className="gauge-total">de ${selectedEvent.budget.toLocaleString()}</span>
                 </div>
               </div>
               <div className="budget-legend chart-legend">
@@ -323,13 +449,13 @@ const DashboardPage = () => {
                   <div className="legend-label">
                     <span className="dot dot--blue"></span> Gastado
                   </div>
-                  <span className="legend-value">$4,560</span>
+                  <span className="legend-value">${selectedEvent.budgetUsed.toLocaleString()}</span>
                 </div>
                 <div className="legend-item">
                   <div className="legend-label">
                     <span className="dot" style={{background: '#E2E8F0'}}></span> Restante
                   </div>
-                  <span className="legend-value">$2,440</span>
+                  <span className="legend-value">${(selectedEvent.budget - selectedEvent.budgetUsed).toLocaleString()}</span>
                 </div>
               </div>
             </div>
