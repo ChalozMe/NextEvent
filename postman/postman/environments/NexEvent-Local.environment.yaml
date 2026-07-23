@@ -1,0 +1,8 @@
+name: NexEvent-Local
+values:
+  - key: BASE_URL
+    value: 'http://localhost:8080'
+  - key: JWT_TOKEN
+    value: ''
+  - key: EVENT_ID
+    value: ''
