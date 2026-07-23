@@ -2,7 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import './DashboardPage.css';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { eventService } from "../services/eventService";
+import { eventService, type EventTask } from "../services/eventService";
 import type { NexEvent } from "../types";
 
 const DashboardPage = () => {
@@ -13,6 +13,7 @@ const DashboardPage = () => {
 
   const [events, setEvents] = useState<NexEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<NexEvent | null>(null);
+  const [tasks, setTasks] = useState<EventTask[]>([]);
   const [loading, setLoading] = useState(true);
 
   //calcs to data
@@ -37,12 +38,16 @@ const DashboardPage = () => {
       )
     : 0;
 
+  const tasksCompleted = tasks.filter(
+    t => t.status === "COMPLETED"
+  ).length;
+
+  const tasksTotal = tasks.length;
+
   const taskPercent =
-    selectedEvent && selectedEvent.tasksTotal > 0
-      ? Math.round(
-        (selectedEvent.tasksCompleted / selectedEvent.tasksTotal) * 100
-      )
-    : 0;
+    tasksTotal > 0
+      ? Math.round((tasksCompleted / tasksTotal) * 100)
+      : 0;
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -62,6 +67,22 @@ const DashboardPage = () => {
 
     loadEvents();
   }, []);
+
+  useEffect(() => {
+    if (!selectedEvent) return;
+
+    const loadTasks = async () => {
+      try {
+        const data = await eventService.getTasks(selectedEvent.id);
+        setTasks(data);
+      } catch (err) {
+        console.error(err);
+        setTasks([]);
+      }
+    };
+
+    loadTasks();
+  }, [selectedEvent]);
 
   if (loading) {
     return <p>Cargando eventos...</p>;
@@ -142,7 +163,7 @@ const DashboardPage = () => {
           </div>
           <div className="kpi-value">{taskPercent}%</div>
           <div className="kpi-footer">
-            <span>{selectedEvent.tasksCompleted} de {selectedEvent.tasksTotal} tareas</span>
+            <span>{tasksCompleted} de {tasksTotal} tareas</span>
             <div className="kpi-progress-bar">
               <div className="kpi-progress-fill kpi-progress-fill--purple" style={{ width: `${taskPercent}%` }}></div>
             </div>
@@ -339,50 +360,77 @@ const DashboardPage = () => {
               <a href="#" className="dash-card__link">Ver todas</a>
             </h2>
             <div className="task-list">
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" />
-                <div className="task-content">
-                  <div className="task-title">Confirmar menú con catering</div>
-                  <div className="task-priority priority-high">Alta prioridad</div>
+              {tasks.length === 0 ? (
+              <p>No hay tareas registradas.</p>
+              ) : (
+              tasks.slice(0, 5).map((task, index) => {
+              const completed = task.status === "COMPLETED";
+
+              const priorityClass =
+                task.priority === "HIGH"
+                ? "priority-high"
+                : task.priority === "LOW"
+                ? "priority-low"
+                : "priority-medium";
+
+              const priorityLabel =
+                completed
+                ? "Completada"
+                : task.priority === "HIGH"
+                ? "Alta prioridad"
+                : task.priority === "LOW"
+                ? "Baja prioridad"
+                : "Media prioridad";
+
+              return (
+              <div key={task.id}>
+                <div className="task-item">
+                  <input
+                    type="checkbox"
+                    className="task-checkbox"
+                    checked={completed}
+                    readOnly
+                  />
+
+              <div className="task-content">
+                <div
+                  className="task-title"
+                  style={
+                    completed
+                      ? {
+                        textDecoration: "line-through",
+                        color: "#94A3B8",
+                        }
+                      : undefined
+                  }
+                >
+                        {task.title}
+                      </div>
+
+                      <div className={`task-priority ${priorityClass}`}>
+                    {priorityLabel}
+                  </div>
                 </div>
-                <div className="task-date">15 May</div>
-              </div>
-              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" />
-                <div className="task-content">
-                  <div className="task-title">Enviar invitaciones digitales</div>
-                  <div className="task-priority priority-medium">Media prioridad</div>
+
+                <div className="task-date">
+                  {new Date(task.dueDate).toLocaleDateString("es-PE", {
+                    day: "2-digit",
+                    month: "short",
+                  })}
                 </div>
-                <div className="task-date">18 May</div>
               </div>
-              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" />
-                <div className="task-content">
-                  <div className="task-title">Reservar transporte</div>
-                  <div className="task-priority priority-medium">Media prioridad</div>
+                  {index < Math.min(tasks.length, 5) - 1 && (
+                  <hr
+                    style={{
+                    borderTop: "1px solid #F1F5F9",
+                    margin: "0",
+                    }}
+                  />
+                  )}
                 </div>
-                <div className="task-date">22 May</div>
-              </div>
-              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" />
-                <div className="task-content">
-                  <div className="task-title">Prueba de menú</div>
-                  <div className="task-priority priority-low">Baja prioridad</div>
-                </div>
-                <div className="task-date">25 May</div>
-              </div>
-              <hr style={{borderTop: '1px solid #F1F5F9', margin: '0'}}/>
-              <div className="task-item">
-                <input type="checkbox" className="task-checkbox" defaultChecked />
-                <div className="task-content">
-                  <div className="task-title" style={{textDecoration: 'line-through', color: '#94A3B8'}}>Confirmar decoración floral</div>
-                  <div className="task-priority priority-low">Completada</div>
-                </div>
-                <div className="task-date">10 May</div>
-              </div>
+                );
+              })
+            )}
             </div>
           </div>
 
