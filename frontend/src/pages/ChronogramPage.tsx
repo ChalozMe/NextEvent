@@ -191,11 +191,6 @@ const ChronogramPage = () => {
         <Link to="/" className="back-link">
           ← Volver a mi evento
         </Link>
-        <div className="chrono-actions">
-          <button className="btn-new-task" onClick={() => setShowModal(true)}>
-            <span>+</span> Nueva tarea
-          </button>
-        </div>
       </div>
 
       {/* Event Selector & Title Area */}
@@ -232,7 +227,7 @@ const ChronogramPage = () => {
         </div>
       </div>
 
-      {/* Status Filter Pills */}
+      {/* Status Filter Pills & New Task Button */}
       <div className="chrono-filters">
         <div className="filter-group">
           <button 
@@ -258,6 +253,11 @@ const ChronogramPage = () => {
             onClick={() => setStatusFilter('COMPLETED')}
           >
             <span className="status-dot green"></span> Completadas
+          </button>
+
+          {/* Prominent New Task Button */}
+          <button className="btn-new-task" onClick={() => setShowModal(true)} style={{ marginLeft: '0.5rem' }}>
+            <span>+</span> Nueva tarea
           </button>
         </div>
         {selectedTaskIds.length > 0 && (
