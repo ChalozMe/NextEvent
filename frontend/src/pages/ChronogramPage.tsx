@@ -5,11 +5,11 @@ import type { NexEvent } from '../types';
 import './ChronogramPage.css';
 
 const PHASE_LABELS: Record<string, { label: string; number: string; unit: string }> = {
-  '6_meses_antes': { label: '🎯 6 meses antes del evento', number: '6', unit: 'meses antes' },
-  '3_meses_antes': { label: '🎯 3 meses antes del evento', number: '3', unit: 'meses antes' },
-  '1_mes_antes': { label: '🎯 1 mes antes del evento', number: '1', unit: 'mes antes' },
-  '1_semana_antes': { label: '🎯 1 semana antes del evento', number: '1', unit: 'semana antes' },
-  'dia_evento': { label: '🎯 Día del evento', number: '0', unit: 'día del evento' }
+  '6_meses_antes': { label: '🎯 6 Meses Antes del Evento', number: '6M', unit: 'Antes' },
+  '3_meses_antes': { label: '🎯 3 Meses Antes del Evento', number: '3M', unit: 'Antes' },
+  '1_mes_antes': { label: '🎯 1 Mes Antes del Evento', number: '1M', unit: 'Antes' },
+  '1_semana_antes': { label: '🎯 1 Semana Antes del Evento', number: '1W', unit: 'Antes' },
+  'dia_evento': { label: '🎉 Día del Evento', number: 'HOY', unit: 'Evento' }
 };
 
 const ChronogramPage = () => {
@@ -179,50 +179,85 @@ const ChronogramPage = () => {
 
   const getStatusLabel = (status: string) => {
     const s = status.toUpperCase();
-    if (s === 'COMPLETED' || s === 'COMPLETADA') return { label: 'Completada', class: 'completada' };
-    if (s === 'IN_PROGRESS' || s === 'PROGRESO') return { label: 'En progreso', class: 'progreso' };
-    return { label: 'Pendiente', class: 'pendiente' };
+    if (s === 'COMPLETED' || s === 'COMPLETADA') return { label: 'Completada', class: 'completada', icon: '✅' };
+    if (s === 'IN_PROGRESS' || s === 'PROGRESO') return { label: 'En progreso', class: 'progreso', icon: '⚡' };
+    return { label: 'Pendiente', class: 'pendiente', icon: '🕒' };
   };
+
+  const getPriorityBadge = (priority?: string) => {
+    const p = (priority || 'MEDIUM').toUpperCase();
+    if (p === 'HIGH' || p === 'ALTA') return <span className="priority-badge high">Prioridad Alta</span>;
+    if (p === 'LOW' || p === 'BAJA') return <span className="priority-badge low">Prioridad Baja</span>;
+    return <span className="priority-badge medium">Prioridad Media</span>;
+  };
+
+  const completedCount = tasks.filter(t => t.status.toUpperCase() === 'COMPLETED' || t.status.toUpperCase() === 'COMPLETADA').length;
+  const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
 
   return (
     <div className="chronogram-container">
       {/* Header Row */}
       <div className="chrono-header-top">
         <Link to="/" className="back-link">
-          ← Volver a mi evento
+          ← Volver a mi Dashboard
         </Link>
       </div>
 
-      {/* Event Selector & Title Area */}
-      <div className="chrono-title-area">
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
-            <h1 className="chrono-title">Cronograma de Planificación ✨</h1>
-            <select
-              className="event-switcher-select"
-              value={selectedEventId || ''}
-              onChange={(e) => setSelectedEventId(e.target.value)}
-            >
-              {events.map(evt => (
-                <option key={evt.id} value={evt.id}>
-                  🎉 {evt.name} ({evt.type})
-                </option>
-              ))}
-            </select>
+      {/* Hero Banner Card */}
+      <div className="chrono-hero-card">
+        <div className="chrono-hero-main">
+          <div className="chrono-hero-header">
+            <span className="chrono-ai-badge">✨ Cronograma Inteligente IA</span>
+            <div className="event-switcher-wrapper">
+              <span className="event-switcher-icon">🎉</span>
+              <select
+                className="event-switcher-select"
+                value={selectedEventId || ''}
+                onChange={(e) => setSelectedEventId(e.target.value)}
+              >
+                {events.map(evt => (
+                  <option key={evt.id} value={evt.id}>
+                    {evt.name} ({evt.type})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <p className="chrono-subtitle">
-            Cronograma inteligente basado en tu evento <span className="chrono-subtitle-highlight">{selectedEvent?.name || 'Evento'}</span> en <span className="chrono-subtitle-highlight">{selectedEvent?.location || 'Arequipa'}</span>.
+
+          <h1 className="chrono-hero-title">{selectedEvent?.name || 'Cronograma de Evento'}</h1>
+          <p className="chrono-hero-subtitle">
+            📍 {selectedEvent?.location || 'Arequipa'} &nbsp;•&nbsp; 🏷️ Categoría: <strong style={{ textTransform: 'capitalize' }}>{selectedEvent?.type || 'Social'}</strong>
           </p>
+
+          {/* Progress Bar */}
+          <div className="chrono-progress-section">
+            <div className="chrono-progress-header">
+              <span>Progreso del evento</span>
+              <span className="chrono-progress-percent">{progressPercent}% completado ({completedCount}/{tasks.length} tareas)</span>
+            </div>
+            <div className="chrono-progress-bar-bg">
+              <div className="chrono-progress-bar-fill" style={{ width: `${progressPercent}%` }}></div>
+            </div>
+          </div>
         </div>
 
-        <div className="chrono-event-info">
-          <div className="chrono-info-block">
-            <span className="chrono-info-label">Fecha del evento</span>
-            <span className="chrono-info-value">📅 {selectedEvent?.date ? new Date(selectedEvent.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'No definida'}</span>
+        <div className="chrono-hero-stats">
+          <div className="hero-stat-box">
+            <span className="hero-stat-icon">📅</span>
+            <div className="hero-stat-info">
+              <span className="hero-stat-label">Fecha del evento</span>
+              <span className="hero-stat-value">
+                {selectedEvent?.date ? new Date(selectedEvent.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No definida'}
+              </span>
+            </div>
           </div>
-          <div className="chrono-info-block">
-            <span className="chrono-info-label">Días restantes</span>
-            <span className="chrono-info-value blue-text">{calculateDaysRemaining(selectedEvent?.date)}</span>
+
+          <div className="hero-stat-box accent">
+            <span className="hero-stat-icon">⏳</span>
+            <div className="hero-stat-info">
+              <span className="hero-stat-label">Días restantes</span>
+              <span className="hero-stat-value highlight">{calculateDaysRemaining(selectedEvent?.date)}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -234,7 +269,7 @@ const ChronogramPage = () => {
             className={`filter-btn ${statusFilter === 'ALL' ? 'active' : ''}`}
             onClick={() => setStatusFilter('ALL')}
           >
-            Todas las tareas ({tasks.length})
+            Todas ({tasks.length})
           </button>
           <button 
             className={`filter-btn ${statusFilter === 'PENDING' ? 'active' : ''}`}
@@ -256,12 +291,12 @@ const ChronogramPage = () => {
           </button>
 
           {/* Prominent New Task Button */}
-          <button className="btn-new-task" onClick={() => setShowModal(true)} style={{ marginLeft: '0.5rem' }}>
+          <button className="btn-new-task" onClick={() => setShowModal(true)}>
             <span>+</span> Nueva tarea
           </button>
         </div>
         {selectedTaskIds.length > 0 && (
-          <span style={{ fontSize: '0.85rem', color: '#6366F1', fontWeight: '600' }}>
+          <span className="selected-tasks-count">
             {selectedTaskIds.length} {selectedTaskIds.length === 1 ? 'tarea seleccionada' : 'tareas seleccionadas'}
           </span>
         )}
@@ -269,9 +304,9 @@ const ChronogramPage = () => {
 
       {/* Timeline Sections */}
       {loading ? (
-        <p style={{ padding: '3rem', textAlign: 'center' }}>Cargando cronograma del evento...</p>
+        <p style={{ padding: '3rem', textAlign: 'center', color: '#64748B' }}>Cargando cronograma del evento...</p>
       ) : (
-        <div style={{ marginLeft: '2rem' }}>
+        <div className="timeline-wrapper">
           <div className="timeline-container">
             {phases.map(phaseKey => {
               const phaseInfo = PHASE_LABELS[phaseKey];
@@ -281,20 +316,22 @@ const ChronogramPage = () => {
 
               return (
                 <div key={phaseKey} className="timeline-section">
+                  {/* Clean Milestone Marker */}
                   <div className="milestone-marker">
-                    {phaseInfo.number}
-                    <span>{phaseInfo.unit}</span>
+                    <span className="marker-number">{phaseInfo.number}</span>
+                    <span className="marker-unit">{phaseInfo.unit}</span>
                   </div>
+
                   <div className="timeline-circle"></div>
                   
                   <div className="milestone-header">
                     <div className="milestone-title">{phaseInfo.label}</div>
-                    <div className="milestone-date">{phaseTasks.length} tareas asociadas</div>
+                    <div className="milestone-date">{phaseTasks.length} tareas</div>
                   </div>
 
                   <div className="task-list-wrapper">
                     {phaseTasks.length === 0 ? (
-                      <p style={{ color: '#94A3B8', fontSize: '0.85rem', fontStyle: 'italic', padding: '0.5rem 1rem' }}>
+                      <p style={{ color: '#94A3B8', fontSize: '0.85rem', fontStyle: 'italic', padding: '1rem' }}>
                         No hay tareas en esta fase. Haz clic en "+ Nueva tarea" para añadir una.
                       </p>
                     ) : (
@@ -312,7 +349,16 @@ const ChronogramPage = () => {
                               {isSelected && '✓'}
                             </div>
 
-                            <div className="task-name">{task.title}</div>
+                            <div className="task-body">
+                              <div className="task-title-row">
+                                <span className="task-name">{task.title}</span>
+                                {getPriorityBadge(task.priority)}
+                              </div>
+                              {task.description && (
+                                <p className="task-description-text">{task.description}</p>
+                              )}
+                            </div>
+
                             <div className="task-assignee">👤 {task.assignedTo || 'Organizador'}</div>
                             <div className="task-date-info">
                               📅 {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Sin fecha'}
@@ -323,10 +369,9 @@ const ChronogramPage = () => {
                               <span 
                                 className={`status-pill ${statusObj.class}`}
                                 onClick={() => handleStatusChange(task.id, task.status)}
-                                title="Haga clic para cambiar estado (Pendiente -> En progreso -> Completada)"
-                                style={{ cursor: 'pointer' }}
+                                title="Clic para alternar estado (Pendiente -> En progreso -> Completada)"
                               >
-                                {statusObj.label} ⚙️
+                                {statusObj.icon} {statusObj.label} ⚙️
                               </span>
                             </div>
 
