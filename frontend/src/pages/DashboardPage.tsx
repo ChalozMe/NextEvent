@@ -3,6 +3,7 @@ import './DashboardPage.css';
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { eventService, type EventTask } from "../services/eventService";
+import { venueService, type EventVenueReservation } from "../services/venueService";
 import type { NexEvent } from "../types";
 
 const DashboardPage = () => {
@@ -12,6 +13,7 @@ const DashboardPage = () => {
   const [events, setEvents] = useState<NexEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<NexEvent | null>(null);
   const [tasks, setTasks] = useState<EventTask[]>([]);
+  const [venueReservations, setVenueReservations] = useState<EventVenueReservation[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Parse ISO or YYYY-MM-DD date strings reliably without UTC midnight off-by-one shifts
@@ -61,8 +63,8 @@ const DashboardPage = () => {
   const guestPercent =
     selectedEvent && selectedEvent.guestsTotal > 0
       ? Math.round(
-          (selectedEvent.guestsConfirmed / selectedEvent.guestsTotal) * 100
-        )
+        (selectedEvent.guestsConfirmed / selectedEvent.guestsTotal) * 100
+      )
       : 0;
 
   // Real Task Calculations from Database
@@ -121,7 +123,18 @@ const DashboardPage = () => {
       }
     };
 
+    const loadVenueReservations = async () => {
+      try {
+        const res = await venueService.getEventReservations(selectedEvent.id);
+        setVenueReservations(res);
+      } catch (err) {
+        console.error("Error al cargar reservas del local:", err);
+        setVenueReservations([]);
+      }
+    };
+
     loadTasks();
+    loadVenueReservations();
   }, [selectedEvent]);
 
   if (loading) {
@@ -265,8 +278,8 @@ const DashboardPage = () => {
               </span>
             )}
             <div className="kpi-progress-bar">
-              <div 
-                className={`kpi-progress-fill ${isOverBudget ? 'kpi-progress-fill--orange' : 'kpi-progress-fill--blue'}`} 
+              <div
+                className={`kpi-progress-fill ${isOverBudget ? 'kpi-progress-fill--orange' : 'kpi-progress-fill--blue'}`}
                 style={{ width: `${Math.min(budgetPercent, 100)}%`, background: isOverBudget ? '#EF4444' : undefined }}
               ></div>
             </div>
@@ -354,13 +367,13 @@ const DashboardPage = () => {
                 <span>25%</span>
                 <span>0%</span>
               </div>
-              
+
               <svg className="line-chart-svg" viewBox="0 0 500 200" preserveAspectRatio="none">
                 <polyline fill="none" stroke="#94A3B8" strokeWidth="2" strokeDasharray="5,5" points="0,200 100,150 200,100 300,50 400,25 500,0" />
-                
+
                 <path d={`M 0 200 Q 150 ${200 - (taskPercent * 1.5)} 300 ${200 - (taskPercent * 1.8)} L 300 200 Z`} fill="url(#gradient)" />
                 <polyline fill="none" stroke="#6366F1" strokeWidth="2.5" points={`0,200 150,${200 - (taskPercent * 1.5)} 300,${200 - (taskPercent * 1.8)}`} />
-                
+
                 <circle cx="300" cy={200 - (taskPercent * 1.8)} r="5" fill="#6366F1" />
                 <rect x="275" y={170 - (taskPercent * 1.8)} width="50" height="22" rx="6" fill="#6366F1" />
                 <text x="300" y={185 - (taskPercent * 1.8)} fill="white" fontSize="11" fontWeight="bold" textAnchor="middle">{taskPercent}%</text>
@@ -393,6 +406,102 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Locales Reservados para este Evento (Nuevo Box) */}
+          <div className="dash-card">
+            <h2 className="dash-card__title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>📍 Locales Reservados para este Evento</span>
+              <button
+                className="dash-card__link"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: '600', color: '#4F46E5' }}
+                onClick={() => navigate('/venues')}
+              >
+                + Explorar locales →
+              </button>
+            </h2>
+
+            {venueReservations.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '2rem 1.5rem',
+                background: '#F8FAFC',
+                borderRadius: '0.75rem',
+                border: '1px dashed #CBD5E1',
+                margin: '0.5rem 0'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏰</div>
+                <h4 style={{ margin: '0 0 0.35rem 0', color: '#1E293B', fontWeight: '700' }}>Aún no has reservado un local para este evento</h4>
+                <p style={{ margin: '0 0 1.25rem 0', color: '#64748B', fontSize: '0.875rem' }}>
+                  Encuentra el lugar perfecto en Arequipa y resérvalo directamente para vincular tu presupuesto.
+                </p>
+                <button
+                  onClick={() => navigate('/venues')}
+                  style={{
+                    background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.5rem',
+                    padding: '0.6rem 1.25rem',
+                    fontWeight: '600',
+                    fontSize: '0.875rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)'
+                  }}
+                >
+                  + Reservar un Local Ahora
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.75rem' }}>
+                {venueReservations.map((res) => (
+                  <div key={res.reservationId} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1.25rem',
+                    padding: '1rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid #E2E8F0',
+                    background: 'white',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                  }}>
+                    <img
+                      src={res.imageUrl || "https://cache.marriott.com/content/dam/marriott-renditions/LIMWI/limwi-ballroom-dance-floor-9195-hor-clsc.jpg"}
+                      alt={res.venueName}
+                      style={{ width: '90px', height: '70px', borderRadius: '0.5rem', objectFit: 'cover' }}
+                    />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#0F172A' }}>{res.venueName}</h4>
+                        <span style={{ fontSize: '0.75rem', background: '#ECFDF5', color: '#059669', padding: '0.15rem 0.5rem', borderRadius: '0.35rem', fontWeight: '700' }}>
+                          ✓ Reservado
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.825rem', color: '#64748B' }}>
+                        📍 {res.district} ({res.address})
+                      </div>
+                      <div style={{ fontSize: '0.825rem', color: '#4F46E5', fontWeight: '600' }}>
+                        📅 Del {res.startDate} al {res.endDate}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1E293B' }}>
+                        S/ {res.totalPrice.toLocaleString('es-PE')}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
+                        👥 Aforo max: {res.maxCapacity}
+                      </span>
+                      <button
+                        onClick={() => navigate(`/venues/${res.venueId}`)}
+                        style={{ background: 'none', border: 'none', color: '#6366F1', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer', padding: 0, marginTop: '0.25rem' }}
+                      >
+                        Ver local →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* RIGHT COLUMN */}
@@ -401,7 +510,7 @@ const DashboardPage = () => {
           <div className="dash-card">
             <h2 className="dash-card__title">
               Próximas Tareas
-              <button 
+              <button
                 className="dash-card__link"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
                 onClick={() => navigate('/chronogram')}
@@ -420,17 +529,17 @@ const DashboardPage = () => {
                     task.priority === "HIGH"
                       ? "priority-high"
                       : task.priority === "LOW"
-                      ? "priority-low"
-                      : "priority-medium";
+                        ? "priority-low"
+                        : "priority-medium";
 
                   const priorityLabel =
                     completed
                       ? "Completada"
                       : task.priority === "HIGH"
-                      ? "Alta prioridad"
-                      : task.priority === "LOW"
-                      ? "Baja prioridad"
-                      : "Media prioridad";
+                        ? "Alta prioridad"
+                        : task.priority === "LOW"
+                          ? "Baja prioridad"
+                          : "Media prioridad";
 
                   return (
                     <div key={task.id}>
@@ -502,7 +611,7 @@ const DashboardPage = () => {
                 </div>
                 <div className="legend-item">
                   <div className="legend-label">
-                    <span className="dot" style={{ background: isOverBudget ? '#EF4444' : '#10B981' }}></span> 
+                    <span className="dot" style={{ background: isOverBudget ? '#EF4444' : '#10B981' }}></span>
                     {isOverBudget ? 'Exceso' : 'Saldo Restante'}
                   </div>
                   <span className="legend-value" style={{ color: isOverBudget ? '#EF4444' : '#10B981', fontWeight: '700' }}>
@@ -527,9 +636,9 @@ const DashboardPage = () => {
 
                 return (
                   <div key={evt.id}>
-                    <div 
-                      className="event-item" 
-                      onClick={() => setSelectedEvent(evt)} 
+                    <div
+                      className="event-item"
+                      onClick={() => setSelectedEvent(evt)}
                       style={{ cursor: 'pointer', background: evt.id === selectedEvent.id ? '#F5F3FF' : 'transparent', padding: '0.75rem', borderRadius: '0.5rem' }}
                     >
                       <div className="event-date-badge">

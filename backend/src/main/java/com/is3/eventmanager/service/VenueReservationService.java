@@ -1,5 +1,6 @@
 package com.is3.eventmanager.service;
 
+import com.is3.eventmanager.dto.EventVenueReservationDTO;
 import com.is3.eventmanager.dto.ReservationRequest;
 import com.is3.eventmanager.dto.ReservationResponse;
 import com.is3.eventmanager.entity.Event;
@@ -71,6 +72,40 @@ public class VenueReservationService {
         }
 
         return responses;
+    }
+
+    public List<EventVenueReservationDTO> getReservationsByEvent(Long eventId) {
+        List<VenueReservation> reservations = reservationRepository.findByEventIdAndStatusNot(eventId, "CANCELLED");
+        List<EventVenueReservationDTO> result = new ArrayList<>();
+
+        for (VenueReservation res : reservations) {
+            Venue venue = venueRepository.findById(res.getVenueId()).orElse(null);
+            if (venue == null) continue;
+
+            LocalDate start = res.getStartDate().toLocalDate();
+            LocalDate end = res.getEndDate().toLocalDate();
+            long days = ChronoUnit.DAYS.between(start, end) + 1;
+            BigDecimal dailyRate = venue.getReferencePrice() != null ? venue.getReferencePrice() : BigDecimal.ZERO;
+            BigDecimal total = dailyRate.multiply(BigDecimal.valueOf(days));
+
+            result.add(new EventVenueReservationDTO(
+                    res.getId(),
+                    venue.getId(),
+                    venue.getName(),
+                    venue.getCategory(),
+                    venue.getDistrict(),
+                    venue.getAddress(),
+                    venue.getImageUrl(),
+                    venue.getMaxCapacity(),
+                    dailyRate,
+                    total,
+                    start.format(DATE_FORMATTER),
+                    end.format(DATE_FORMATTER),
+                    res.getStatus()
+            ));
+        }
+
+        return result;
     }
 
     public ReservationResponse createReservation(Long venueId, ReservationRequest request) {

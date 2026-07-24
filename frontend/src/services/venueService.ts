@@ -21,6 +21,22 @@ export interface VenueReservationData {
   status: string;
 }
 
+export interface EventVenueReservation {
+  reservationId: number;
+  venueId: number;
+  venueName: string;
+  category: string;
+  district: string;
+  address: string;
+  imageUrl: string;
+  maxCapacity: number;
+  referencePrice: number;
+  totalPrice: number;
+  startDate: string;
+  endDate: string;
+  status: string;
+}
+
 export const venueService = {
   async getVenues(category?: string): Promise<Venue[]> {
     const url = category && category !== "Todos" 
@@ -99,10 +115,25 @@ export const venueService = {
     return response.json();
   },
 
+  async getEventReservations(eventId: string): Promise<EventVenueReservation[]> {
+    const token = localStorage.getItem("nexevent_token");
+    const response = await fetch(`http://localhost:8080/api/events/${eventId}/reservations`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error("No se pudieron obtener los locales reservados para el evento");
+    }
+    return response.json();
+  },
+
   async createVenueReservation(venueId: string, startDate: string, endDate?: string, eventId?: string): Promise<VenueReservationData> {
+    const token = localStorage.getItem("nexevent_token");
     const response = await fetch(`${API_URL}/${venueId}/reservations`, {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({

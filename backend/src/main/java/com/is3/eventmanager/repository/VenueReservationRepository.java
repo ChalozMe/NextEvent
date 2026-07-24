@@ -10,4 +10,5 @@ import java.util.List;
 public interface VenueReservationRepository extends JpaRepository<VenueReservation, Long> {
     List<VenueReservation> findByVenueId(Long venueId);
     List<VenueReservation> findByVenueIdAndStatusNot(Long venueId, String status);
+    List<VenueReservation> findByEventIdAndStatusNot(Long eventId, String status);
 }
