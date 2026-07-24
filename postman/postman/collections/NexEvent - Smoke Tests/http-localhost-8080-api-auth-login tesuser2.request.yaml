@@ -1,0 +1,15 @@
+$kind: http-request
+name: http://localhost:8080/api/auth/login tesuser2
+description: ""
+url: http://localhost:8080/api/auth/login
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"email\": \"smoke-test@nexevent.com\",\r
+
+    \    \"password\": \"Password123\"\r
+
+    }"
+order: 4442381031201964
