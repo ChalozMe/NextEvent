@@ -9,6 +9,10 @@ import com.is3.eventmanager.dto.EventRequest;
 import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.repository.EventRepository;
 
+//task added
+import com.is3.eventmanager.entity.Task;
+import com.is3.eventmanager.service.TaskTemplateService;
+import com.is3.eventmanager.repository.TaskRepository;
 
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -23,13 +27,27 @@ public class EventService {
     private final UserRepository userRepository;
     private final UserEventRepository userEventRepository;
 
-    public EventService(EventRepository eventRepository, UserRepository userRepository, UserEventRepository userEventRepository) {
-        this.eventRepository = eventRepository;
-        this.userRepository = userRepository;
-        this.userEventRepository = userEventRepository;
+    private final TaskRepository taskRepository;
+    private final TaskTemplateService taskTemplateService;
+
+    public EventService(
+        EventRepository eventRepository,
+        UserRepository userRepository,
+        UserEventRepository userEventRepository,
+        TaskRepository taskRepository,
+        TaskTemplateService taskTemplateService) {
+
+      this.eventRepository = eventRepository;
+      this.userRepository = userRepository;
+      this.userEventRepository = userEventRepository;
+      this.taskRepository = taskRepository;
+      this.taskTemplateService = taskTemplateService;
     }
 
     public void create(EventRequest request, String email) {
+
+      User user = userRepository.findByEmail(email).orElseThrow();
+
       Event event = new Event();
 
       event.setName(request.getName());
@@ -47,10 +65,7 @@ public class EventService {
 
       event.setCoverImage(null);
 
-      eventRepository.save(event);
-      
-      User user = userRepository.findByEmail(email)
-        .orElseThrow();
+      event = eventRepository.save(event);
 
       UserEvent userEvent = new UserEvent();
       userEvent.setUser(user);
@@ -59,10 +74,10 @@ public class EventService {
       userEvent.setJoinedAt(LocalDateTime.now());
 
       userEventRepository.save(userEvent);
-    }
 
-    public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+      for (Task task : taskTemplateService.generate(event)) {
+        taskRepository.save(task);
+      }
     }
 
     public void joinEvent(Long eventId, Long userId) {
@@ -92,5 +107,9 @@ public class EventService {
       return userEvents.stream()
         .map(UserEvent::getEvent)
         .toList();
+    }
+
+    public List<Task> getTasks(Long eventId) {
+     return taskRepository.findByEventIdOrderByDueDateAsc(eventId);
     }
 }

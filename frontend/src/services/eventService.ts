@@ -1,14 +1,22 @@
-import type { NexEvent } from "../types";
-import type { CreateEventRequest } from "../types";
+import type { NexEvent, CreateEventRequest } from "../types";
 
 const API_URL = "http://localhost:8080/api/events";
 
+export interface EventTask {
+  id: number;
+  title: string;
+  description: string | null;
+  dueDate: string;
+  status: string;
+  priority: string;
+  phase: string;
+  assignedTo: string | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
 export const eventService = {
-
-
-
   async createEvent(data: CreateEventRequest): Promise<void> {
-
     const token = localStorage.getItem("nexevent_token");
 
     const response = await fetch(API_URL, {
@@ -25,11 +33,7 @@ export const eventService = {
     }
   },
 
-
-
-
   async getEvents(): Promise<NexEvent[]> {
-
     const token = localStorage.getItem("nexevent_token");
 
     const response = await fetch(API_URL, {
@@ -43,14 +47,14 @@ export const eventService = {
     }
 
     const events = await response.json();
+
     return events.map((event: any) => ({
       id: event.id.toString(),
 
       name: event.name,
       type: event.type.toLowerCase(),
-      
+
       date: event.eventDate,
-      
       capacity: event.capacity,
 
       budget: Number(event.budget ?? 0),
@@ -66,8 +70,23 @@ export const eventService = {
       guestsTotal: event.capacity,
 
       tasksCompleted: 0,
-      tasksTotal: 0
+      tasksTotal: 0,
     }));
   },
 
+  async getTasks(eventId: string): Promise<EventTask[]> {
+    const token = localStorage.getItem("nexevent_token");
+
+    const response = await fetch(`${API_URL}/${eventId}/tasks`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("No se pudieron obtener las tareas");
+    }
+
+    return response.json();
+  },
 };
