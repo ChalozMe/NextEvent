@@ -6,3 +6,12 @@ body:
   type: json
   content: "{\n    \"name\": \"Test_User\",\n    \"email\": \"test@nexevent.com\",\n    \"password\": \"Test1234\"\n}"
 order: 3767148224100875
+scripts:
+  - type: afterResponse
+    code: |
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test("Response is User registered", function () {
+          pm.expect(pm.response.text()).to.equal("User registered");
+      });
