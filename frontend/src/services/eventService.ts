@@ -15,15 +15,6 @@ export interface EventTask {
   createdAt: string;
 }
 
-export interface CreateTaskRequest {
-  title: string;
-  description: string;
-  dueDate: string;
-  priority: string;
-  phase: string;
-  assignedTo: string;
-}
-
 export const eventService = {
   async createEvent(data: CreateEventRequest): Promise<void> {
     const token = localStorage.getItem("nexevent_token");
@@ -99,60 +90,53 @@ export const eventService = {
     return response.json();
   },
 
-  async createTask(
-    eventId: string,
-    request: CreateTaskRequest,
-  ): Promise<EventTask> {
+  async updateTaskStatus(taskId: number, status: string): Promise<EventTask> {
     const token = localStorage.getItem("nexevent_token");
+    const response = await fetch(`http://localhost:8080/api/tasks/${taskId}/status`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
 
-    const response = await fetch(`${API_URL}/${eventId}/tasks`, {
+    if (!response.ok) {
+      throw new Error("No se pudo actualizar el estado de la tarea");
+    }
+
+    return response.json();
+  },
+
+  async createTask(eventId: string, taskData: Partial<EventTask>): Promise<EventTask> {
+    const token = localStorage.getItem("nexevent_token");
+    const response = await fetch(`http://localhost:8080/api/tasks/event/${eventId}`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify(taskData),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-
-      throw new Error(
-        errorText || `No se pudo crear la tarea (${response.status})`,
-      );
+      throw new Error("No se pudo crear la tarea");
     }
 
     return response.json();
   },
 
-  async updateTaskStatus(
-    eventId: string,
-    taskId: number,
-    status: "PENDING" | "IN_PROGRESS" | "COMPLETED",
-  ): Promise<EventTask> {
+  async deleteTask(taskId: number): Promise<void> {
     const token = localStorage.getItem("nexevent_token");
-
-    const response = await fetch(
-      `${API_URL}/${eventId}/tasks/${taskId}/status`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
+    const response = await fetch(`http://localhost:8080/api/tasks/${taskId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
     if (!response.ok) {
-      const errorText = await response.text();
-
-      throw new Error(
-        errorText || `No se pudo actualizar la tarea (${response.status})`,
-      );
+      throw new Error("No se pudo eliminar la tarea");
     }
-
-    return response.json();
   },
-
 };

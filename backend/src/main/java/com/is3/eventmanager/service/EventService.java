@@ -5,10 +5,7 @@ import com.is3.eventmanager.entity.User;
 import com.is3.eventmanager.entity.UserEvent;
 import com.is3.eventmanager.repository.UserRepository;
 import com.is3.eventmanager.repository.UserEventRepository;
-
 import com.is3.eventmanager.dto.EventRequest;
-import com.is3.eventmanager.dto.TaskRequest;
-
 import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.repository.EventRepository;
 
@@ -116,53 +113,4 @@ public class EventService {
     public List<Task> getTasks(Long eventId) {
      return taskRepository.findByEventIdOrderByDueDateAsc(eventId);
     }
-
-    public Task createTask(Long eventId, TaskRequest request) {
-
-      Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
-
-      Task task = new Task();
-
-      task.setEvent(event);
-      task.setTitle(request.getTitle());
-      task.setDescription(request.getDescription());
-      task.setDueDate(request.getDueDate().atStartOfDay());
-      task.setPriority(request.getPriority());
-      task.setPhase(request.getPhase());
-      task.setAssignedTo(request.getAssignedTo());
-      task.setStatus("PENDING");
-      task.setCreatedAt(LocalDateTime.now());
-
-      return taskRepository.save(task);
-    }
-
-    public Task updateTaskStatus(
-      Long eventId,
-      Long taskId,
-      String status
-      ) {
-        Task task = taskRepository.findById(taskId)
-          .orElseThrow(() -> new RuntimeException("Task not found"));
-
-          if (!task.getEvent().getId().equals(eventId)) {
-            throw new RuntimeException("Task does not belong to this event");
-        }
-
-        String normalizedStatus = status.toUpperCase();
-
-        if (!List.of("PENDING", "IN_PROGRESS", "COMPLETED")
-            .contains(normalizedStatus)) {
-            throw new RuntimeException("Invalid task status");
-          }
-
-        task.setStatus(normalizedStatus);
-
-        if ("COMPLETED".equals(normalizedStatus)) {
-          task.setCompletedAt(LocalDateTime.now());
-        } else {
-          task.setCompletedAt(null);
-        }
-
-        return taskRepository.save(task);
-      }
 }
