@@ -102,10 +102,6 @@ const VenueCatalogPage = () => {
     <div className="venues-container">
       {/* Header Profile */}
       <div className="venues-header-top">
-        <div className="action-icon">
-          🔔
-          <span className="notification-badge">3</span>
-        </div>
         <div className="venues-header-user">
           <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="Avatar" className="venues-user-avatar" />
           <div className="venues-user-name">

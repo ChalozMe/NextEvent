@@ -132,10 +132,6 @@ const DashboardPage = () => {
         </div>
         <div className="dashboard-header__actions">
           <div className="action-icon">🔍</div>
-          <div className="action-icon">
-            🔔
-            <span className="notification-badge">3</span>
-          </div>
 
           <select
             value={selectedEvent?.id}

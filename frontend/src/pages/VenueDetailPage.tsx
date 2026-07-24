@@ -293,10 +293,6 @@ const VenueDetailPage = () => {
           ← Volver a locales de Arequipa
         </Link>
         <div className="venue-detail-actions">
-          <div className="action-icon" style={{position: 'relative', cursor: 'pointer', marginRight: '0.5rem'}}>
-            🔔
-            <span className="notification-badge" style={{position: 'absolute', top: '-5px', right: '-5px', background: '#6366F1', color: 'white', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem'}}>3</span>
-          </div>
           <button 
             className={`btn-icon-circular ${isFavorite ? 'active' : ''}`}
             onClick={toggleFavorite}

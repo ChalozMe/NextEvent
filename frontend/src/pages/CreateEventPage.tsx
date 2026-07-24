@@ -92,15 +92,6 @@ const CreateEventPage = () => {
           <span>&gt;</span>
           <span>Nuevo evento</span>
         </div>
-        <div className="create-header-actions">
-          <div className="action-icon">
-            🔔
-            <span className="notification-badge">3</span>
-          </div>
-          <button className="btn-new-event">
-            <span>+</span> Nuevo evento
-          </button>
-        </div>
       </div>
 
       <div className="page-title-section">

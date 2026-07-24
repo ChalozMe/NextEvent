@@ -10,10 +10,6 @@ const ChronogramPage = () => {
           ← Volver a mi evento
         </Link>
         <div className="chrono-actions">
-          <div className="action-icon">
-            🔔
-            <span className="notification-badge">3</span>
-          </div>
           <button className="btn-new-task">
             <span>+</span> Nueva tarea
           </button>
