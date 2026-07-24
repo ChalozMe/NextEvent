@@ -188,6 +188,32 @@ const ChronogramPage = () => {
     }
   };
 
+  const handleStatusChange = async (
+    taskId: number,
+    status: "PENDING" | "IN_PROGRESS" | "COMPLETED",
+  ) => {
+    const eventId = localStorage.getItem("selected_event");
+
+    if (!eventId) return;
+
+    try {
+      const updatedTask = await eventService.updateTaskStatus(
+        eventId,
+        taskId,
+        status,
+      );
+
+      setTasks((currentTasks) =>
+        currentTasks.map((task) =>
+          task.id === taskId ? updatedTask : task,
+        ),
+      );
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo actualizar el estado.");
+    }
+  };
+
 
   if (loading) {
     return <p>Cargando cronograma...</p>;
@@ -370,12 +396,31 @@ const ChronogramPage = () => {
                               📅 {formatShortDate(task.dueDate)}
                             </div>
 
-                            <div className="task-status-container">
-                              <span
-                                className={`status-pill ${status.className}`}
-                              >
-                                {status.label}
-                              </span>
+                              <div className="task-status-container">
+                                <select
+                                  value={task.status}
+                                  onChange={(e) =>
+                                    handleStatusChange(
+                                      task.id,
+                                      e.target.value as
+                                        | "PENDING"
+                                        | "IN_PROGRESS"
+                                        | "COMPLETED",
+                                    )
+                                  }
+                                >
+                                <option value="PENDING">
+                                  Pendiente
+                                </option>
+
+                                <option value="IN_PROGRESS">
+                                  En progreso
+                                </option>
+
+                                <option value="COMPLETED">
+                                  Completada
+                                </option>
+                              </select>
                             </div>
 
                             <div className="task-menu">⋮</div>

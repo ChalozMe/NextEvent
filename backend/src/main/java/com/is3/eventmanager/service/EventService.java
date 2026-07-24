@@ -135,4 +135,33 @@ public class EventService {
       return taskRepository.save(task);
     }
 
+    public Task updateTaskStatus(
+      Long eventId,
+      Long taskId,
+      String status
+      ) {
+        Task task = taskRepository.findById(taskId)
+          .orElseThrow(() -> new RuntimeException("Task not found"));
+
+          if (!task.getEvent().getId().equals(eventId)) {
+            throw new RuntimeException("Task does not belong to this event");
+        }
+
+        String normalizedStatus = status.toUpperCase();
+
+        if (!List.of("PENDING", "IN_PROGRESS", "COMPLETED")
+            .contains(normalizedStatus)) {
+            throw new RuntimeException("Invalid task status");
+          }
+
+        task.setStatus(normalizedStatus);
+
+        if ("COMPLETED".equals(normalizedStatus)) {
+          task.setCompletedAt(LocalDateTime.now());
+        } else {
+          task.setCompletedAt(null);
+        }
+
+        return taskRepository.save(task);
+      }
 }

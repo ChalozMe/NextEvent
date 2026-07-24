@@ -3,6 +3,7 @@ package com.is3.eventmanager.controller;
 import com.is3.eventmanager.dto.EventRequest;
 import com.is3.eventmanager.dto.JoinEventRequest;
 import com.is3.eventmanager.dto.TaskRequest;
+import com.is3.eventmanager.dto.UpdateTaskStatusRequest;
 
 import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.entity.UserEvent;
@@ -64,4 +65,18 @@ public class EventController {
     public Task createTask(@PathVariable Long eventId, @RequestBody TaskRequest request) {
       return eventService.createTask(eventId, request);
     }
+
+    @PatchMapping("/{eventId}/tasks/{taskId}/status")
+    public Task updateTaskStatus(
+    @PathVariable Long eventId,
+    @PathVariable Long taskId,
+    @RequestBody UpdateTaskStatusRequest request
+    ) {
+      return eventService.updateTaskStatus(
+        eventId,
+        taskId,
+        request.getStatus()
+      );
+    }
+
 }

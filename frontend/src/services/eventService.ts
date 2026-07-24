@@ -124,4 +124,35 @@ export const eventService = {
 
     return response.json();
   },
+
+  async updateTaskStatus(
+    eventId: string,
+    taskId: number,
+    status: "PENDING" | "IN_PROGRESS" | "COMPLETED",
+  ): Promise<EventTask> {
+    const token = localStorage.getItem("nexevent_token");
+
+    const response = await fetch(
+      `${API_URL}/${eventId}/tasks/${taskId}/status`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      throw new Error(
+        errorText || `No se pudo actualizar la tarea (${response.status})`,
+      );
+    }
+
+    return response.json();
+  },
+
 };
