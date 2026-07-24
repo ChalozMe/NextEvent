@@ -14,6 +14,41 @@ const DashboardPage = () => {
   const [tasks, setTasks] = useState<EventTask[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Parse ISO or YYYY-MM-DD date strings reliably without UTC midnight off-by-one shifts
+  const parseEventDate = (dateStr?: string): Date | null => {
+    if (!dateStr) return null;
+    const cleanStr = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const parts = cleanStr.split('-').map(Number);
+    if (parts.length >= 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const calculateDaysRemainingInfo = (dateStr?: string): { days: number; statusText: string; isPast: boolean; isToday: boolean } => {
+    const evtDate = parseEventDate(dateStr);
+    if (!evtDate) return { days: 0, statusText: 'Fecha no definida', isPast: false, isToday: false };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const eventDateMidnight = new Date(evtDate.getFullYear(), evtDate.getMonth(), evtDate.getDate());
+    eventDateMidnight.setHours(0, 0, 0, 0);
+
+    const diffTime = eventDateMidnight.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) {
+      return { days: diffDays, statusText: 'para la fecha del evento', isPast: false, isToday: false };
+    } else if (diffDays === 0) {
+      return { days: 0, statusText: '¡Hoy es el día del evento! 🎉', isPast: false, isToday: true };
+    } else {
+      const pastDays = Math.abs(diffDays);
+      return { days: 0, statusText: `Finalizado (hace ${pastDays} ${pastDays === 1 ? 'día' : 'días'})`, isPast: true, isToday: false };
+    }
+  };
+
   // Calculations for active event budget
   const budgetPercent = selectedEvent && selectedEvent.budget > 0
     ? Math.round((selectedEvent.budgetUsed / selectedEvent.budget) * 100)
@@ -21,15 +56,7 @@ const DashboardPage = () => {
 
   const budgetBalance = selectedEvent ? selectedEvent.budget - selectedEvent.budgetUsed : 0;
   const isOverBudget = budgetBalance < 0;
-
-  const daysRemaining = selectedEvent
-    ? Math.max(
-        0,
-        Math.ceil(
-          (new Date(selectedEvent.date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        )
-      )
-    : 0;
+  const daysInfo = calculateDaysRemainingInfo(selectedEvent?.date);
 
   const guestPercent =
     selectedEvent && selectedEvent.guestsTotal > 0
@@ -53,6 +80,14 @@ const DashboardPage = () => {
 
   const tasksTotal = tasks.length;
   const taskPercent = tasksTotal > 0 ? Math.round((tasksCompleted / tasksTotal) * 100) : 0;
+
+  // Sorted tasks for Próximas Tareas (uncompleted tasks first)
+  const upcomingTasks = [...tasks].sort((a, b) => {
+    const aDone = a.status.toUpperCase() === "COMPLETED" || a.status.toUpperCase() === "COMPLETADA";
+    const bDone = b.status.toUpperCase() === "COMPLETED" || b.status.toUpperCase() === "COMPLETADA";
+    if (aDone === bDone) return 0;
+    return aDone ? 1 : -1;
+  });
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -196,11 +231,13 @@ const DashboardPage = () => {
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">{daysRemaining}</div>
+          <div className="kpi-value">{daysInfo.days}</div>
           <div className="kpi-footer">
-            <span>para la fecha principal</span>
+            <span style={{ color: daysInfo.isPast ? '#94A3B8' : daysInfo.isToday ? '#10B981' : '#475569', fontWeight: daysInfo.isToday ? '700' : 'normal' }}>
+              {daysInfo.statusText}
+            </span>
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--orange" style={{ width: `${Math.min(daysRemaining, 100)}%` }}></div>
+              <div className="kpi-progress-fill kpi-progress-fill--orange" style={{ width: `${Math.min(daysInfo.days, 100)}%` }}></div>
             </div>
           </div>
         </div>
@@ -267,7 +304,7 @@ const DashboardPage = () => {
                     {selectedEvent.status}
                   </span>
                   <div className="event-meta">
-                    <span>📅 {new Date(selectedEvent.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })} </span>
+                    <span>📅 {selectedEvent.date ? new Date(selectedEvent.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha'} </span>
                     <span>📍 {selectedEvent.location || "Arequipa"}</span>
                     <span>👥 {selectedEvent.capacity} aforo</span>
                   </div>
@@ -360,17 +397,23 @@ const DashboardPage = () => {
 
         {/* RIGHT COLUMN */}
         <div className="grid-right">
-          {/* Próximas Tareas (Database Driven) */}
+          {/* Próximas Tareas (Database Driven & Direct Route) */}
           <div className="dash-card">
             <h2 className="dash-card__title">
               Próximas Tareas
-              <Link to="/chronogram" className="dash-card__link">Ver todas ({tasks.length}) →</Link>
+              <button 
+                className="dash-card__link"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                onClick={() => navigate('/chronogram')}
+              >
+                Ver todas ({tasks.length}) →
+              </button>
             </h2>
             <div className="task-list">
-              {tasks.length === 0 ? (
+              {upcomingTasks.length === 0 ? (
                 <p style={{ color: '#94A3B8', fontStyle: 'italic', padding: '1rem' }}>No hay tareas registradas para este evento.</p>
               ) : (
-                tasks.slice(0, 5).map((task, index) => {
+                upcomingTasks.slice(0, 5).map((task, index) => {
                   const completed = task.status.toUpperCase() === "COMPLETED" || task.status.toUpperCase() === "COMPLETADA";
 
                   const priorityClass =
@@ -423,7 +466,7 @@ const DashboardPage = () => {
                           }) : 'Sin fecha'}
                         </div>
                       </div>
-                      {index < Math.min(tasks.length, 5) - 1 && (
+                      {index < Math.min(upcomingTasks.length, 5) - 1 && (
                         <hr
                           style={{
                             borderTop: "1px solid #F1F5F9",

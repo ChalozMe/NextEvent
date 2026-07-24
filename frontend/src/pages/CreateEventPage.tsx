@@ -23,8 +23,8 @@ const AREQUIPA_DISTRICTS = [
 const CreateEventPage = () => {
   const navigate = useNavigate();
   const [eventType, setEventType] = useState<EventType>('Boda');
-  const [startDate, setStartDate] = useState('2025-07-20');
-  const [endDate, setEndDate] = useState('2025-07-20');
+  const [startDate, setStartDate] = useState('2027-07-20');
+  const [endDate, setEndDate] = useState('2027-07-20');
   const [capacity, setCapacity] = useState('200');
   const [budget, setBudget] = useState('7000.00');
   
