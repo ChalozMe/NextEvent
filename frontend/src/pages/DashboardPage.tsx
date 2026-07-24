@@ -57,6 +57,7 @@ const DashboardPage = () => {
 
       if (data.length > 0) {
           setSelectedEvent(data[0]);
+          localStorage.setItem("selected_event", data[0].id);
       }
       } catch (error) {
         console.error(error);
@@ -137,7 +138,10 @@ const DashboardPage = () => {
             value={selectedEvent?.id}
             onChange={(e) => {
               const event = events.find(ev => ev.id === e.target.value);
-                if (event) setSelectedEvent(event);
+              if (event) {
+                setSelectedEvent(event);
+                localStorage.setItem("selected_event", event.id);
+              }
             }}
           >
             {events.map(event => (

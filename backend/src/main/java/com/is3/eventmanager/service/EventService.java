@@ -5,7 +5,10 @@ import com.is3.eventmanager.entity.User;
 import com.is3.eventmanager.entity.UserEvent;
 import com.is3.eventmanager.repository.UserRepository;
 import com.is3.eventmanager.repository.UserEventRepository;
+
 import com.is3.eventmanager.dto.EventRequest;
+import com.is3.eventmanager.dto.TaskRequest;
+
 import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.repository.EventRepository;
 
@@ -112,4 +115,24 @@ public class EventService {
     public List<Task> getTasks(Long eventId) {
      return taskRepository.findByEventIdOrderByDueDateAsc(eventId);
     }
+
+    public Task createTask(Long eventId, TaskRequest request) {
+
+      Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+
+      Task task = new Task();
+
+      task.setEvent(event);
+      task.setTitle(request.getTitle());
+      task.setDescription(request.getDescription());
+      task.setDueDate(request.getDueDate().atStartOfDay());
+      task.setPriority(request.getPriority());
+      task.setPhase(request.getPhase());
+      task.setAssignedTo(request.getAssignedTo());
+      task.setStatus("PENDING");
+      task.setCreatedAt(LocalDateTime.now());
+
+      return taskRepository.save(task);
+    }
+
 }

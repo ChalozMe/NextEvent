@@ -16,6 +16,7 @@ import com.is3.eventmanager.security.JwtAuthenticationFilter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -45,6 +46,7 @@ public class SecurityConfig {
           )
 
           .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .requestMatchers("/api/auth/**").permitAll()
             .anyRequest().authenticated()
           )

@@ -2,6 +2,7 @@ package com.is3.eventmanager.controller;
 
 import com.is3.eventmanager.dto.EventRequest;
 import com.is3.eventmanager.dto.JoinEventRequest;
+import com.is3.eventmanager.dto.TaskRequest;
 
 import com.is3.eventmanager.entity.Event;
 import com.is3.eventmanager.entity.UserEvent;
@@ -57,5 +58,10 @@ public class EventController {
     @GetMapping("/{eventId}/tasks")
     public List<Task> getTasks(@PathVariable Long eventId) {
       return eventService.getTasks(eventId);
+    }
+    
+    @PostMapping("/{eventId}/tasks")
+    public Task createTask(@PathVariable Long eventId, @RequestBody TaskRequest request) {
+      return eventService.createTask(eventId, request);
     }
 }
