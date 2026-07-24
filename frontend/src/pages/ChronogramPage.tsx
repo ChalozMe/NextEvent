@@ -19,6 +19,9 @@ const ChronogramPage = () => {
   const [tasks, setTasks] = useState<EventTask[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Selection state (circle checkboxes only select/unselect)
+  const [selectedTaskIds, setSelectedTaskIds] = useState<number[]>([]);
+
   // Filter state: 'ALL' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'>('ALL');
 
@@ -65,14 +68,23 @@ const ChronogramPage = () => {
     if (!selectedEventId) return;
     const evt = events.find(e => e.id === selectedEventId) || null;
     setSelectedEvent(evt);
+    setSelectedTaskIds([]);
     fetchEventTasks(selectedEventId);
   }, [selectedEventId, events]);
 
+  // Circle toggle selection (only selects/deselects task row)
+  const toggleTaskSelection = (taskId: number) => {
+    setSelectedTaskIds(prev => 
+      prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
+    );
+  };
+
+  // ONLY status pill gear button changes task status
   const handleStatusChange = async (taskId: number, currentStatus: string) => {
-    // Cycle: PENDING -> IN_PROGRESS -> COMPLETED -> PENDING
     let nextStatus = 'PENDING';
-    if (currentStatus === 'PENDING' || currentStatus === 'pendiente') nextStatus = 'IN_PROGRESS';
-    else if (currentStatus === 'IN_PROGRESS' || currentStatus === 'progreso') nextStatus = 'COMPLETED';
+    const s = currentStatus.toUpperCase();
+    if (s === 'PENDING' || s === 'PENDIENTE') nextStatus = 'IN_PROGRESS';
+    else if (s === 'IN_PROGRESS' || s === 'PROGRESO') nextStatus = 'COMPLETED';
     else nextStatus = 'PENDING';
 
     try {
@@ -81,6 +93,20 @@ const ChronogramPage = () => {
     } catch (err) {
       console.error("Error al actualizar tarea:", err);
       alert("No se pudo actualizar el estado de la tarea.");
+    }
+  };
+
+  // Delete task
+  const handleDeleteTask = async (taskId: number, taskTitle: string) => {
+    if (!window.confirm(`¿Estás seguro de eliminar la tarea "${taskTitle}"?`)) return;
+
+    try {
+      await eventService.deleteTask(taskId);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      setSelectedTaskIds(prev => prev.filter(id => id !== taskId));
+    } catch (err) {
+      console.error("Error al eliminar tarea:", err);
+      alert("No se pudo eliminar la tarea.");
     }
   };
 
@@ -121,7 +147,6 @@ const ChronogramPage = () => {
     return diffDays > 0 ? `${diffDays} días` : 'Concluido';
   };
 
-  // Filter tasks
   const filteredTasks = tasks.filter(t => {
     if (statusFilter === 'ALL') return true;
     const s = t.status.toUpperCase();
@@ -142,7 +167,6 @@ const ChronogramPage = () => {
     return '3_meses_antes';
   };
 
-  // Group tasks by phase
   const phases = ['6_meses_antes', '3_meses_antes', '1_mes_antes', '1_semana_antes', 'dia_evento'];
   const groupedTasks: Record<string, EventTask[]> = {};
 
@@ -179,7 +203,6 @@ const ChronogramPage = () => {
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
             <h1 className="chrono-title">Cronograma de Planificación ✨</h1>
-            {/* Event Dropdown Switcher */}
             <select
               className="event-switcher-select"
               value={selectedEventId || ''}
@@ -237,6 +260,11 @@ const ChronogramPage = () => {
             <span className="status-dot green"></span> Completadas
           </button>
         </div>
+        {selectedTaskIds.length > 0 && (
+          <span style={{ fontSize: '0.85rem', color: '#6366F1', fontWeight: '600' }}>
+            {selectedTaskIds.length} {selectedTaskIds.length === 1 ? 'tarea seleccionada' : 'tareas seleccionadas'}
+          </span>
+        )}
       </div>
 
       {/* Timeline Sections */}
@@ -272,30 +300,44 @@ const ChronogramPage = () => {
                     ) : (
                       phaseTasks.map(task => {
                         const statusObj = getStatusLabel(task.status);
+                        const isSelected = selectedTaskIds.includes(task.id);
                         return (
-                          <div key={task.id} className="timeline-task">
+                          <div key={task.id} className={`timeline-task ${isSelected ? 'selected-row' : ''}`}>
+                            {/* Circle Checkbox ONLY selects/deselects row */}
                             <div 
-                              className={`task-checkbox-circle ${statusObj.class}`}
-                              onClick={() => handleStatusChange(task.id, task.status)}
-                              title="Haga clic para cambiar estado de la tarea"
+                              className={`task-checkbox-circle ${isSelected ? 'selected' : ''}`}
+                              onClick={() => toggleTaskSelection(task.id)}
+                              title="Seleccionar tarea"
                             >
-                              {statusObj.class === 'completada' && '✓'}
+                              {isSelected && '✓'}
                             </div>
+
                             <div className="task-name">{task.title}</div>
                             <div className="task-assignee">👤 {task.assignedTo || 'Organizador'}</div>
                             <div className="task-date-info">
                               📅 {task.dueDate ? new Date(task.dueDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Sin fecha'}
                             </div>
+
+                            {/* ONLY Status Pill changes status */}
                             <div className="task-status-container">
                               <span 
                                 className={`status-pill ${statusObj.class}`}
                                 onClick={() => handleStatusChange(task.id, task.status)}
-                                title="Clic para alternar (Pendiente -> En progreso -> Completada)"
+                                title="Haga clic para cambiar estado (Pendiente -> En progreso -> Completada)"
                                 style={{ cursor: 'pointer' }}
                               >
                                 {statusObj.label} ⚙️
                               </span>
                             </div>
+
+                            {/* Delete Task Button */}
+                            <button
+                              className="btn-delete-task"
+                              onClick={() => handleDeleteTask(task.id, task.title)}
+                              title="Eliminar tarea"
+                            >
+                              🗑️
+                            </button>
                           </div>
                         );
                       })

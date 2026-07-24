@@ -125,4 +125,18 @@ export const eventService = {
 
     return response.json();
   },
+
+  async deleteTask(taskId: number): Promise<void> {
+    const token = localStorage.getItem("nexevent_token");
+    const response = await fetch(`http://localhost:8080/api/tasks/${taskId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("No se pudo eliminar la tarea");
+    }
+  },
 };
