@@ -1,0 +1,15 @@
+UPDATE venues SET image_url = 'https://www.chullostravelperu.com/blog/wp-content/uploads/2025/11/Molino-abre.jpg' WHERE name = 'Hacienda Sabandía';
+UPDATE venues SET image_url = 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/16/5d/fc/2d/fundo-el-fierro.jpg?w=1200&h=1200&s=1' WHERE name = 'Fundo El Fierro';
+UPDATE venues SET image_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0C4Tfy46ncHhNlxUH8lebEnPlEi14zAxpQAGj50OHeuJuJXcp9L1y-7A&s=10' WHERE name = 'Casona Tristán del Pozo';
+UPDATE venues SET image_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzvG7kyCc4RMHy4LMSg9MbJ5mUDi8nO1DWe0aky4M_aQ&s=10' WHERE name = 'Quinta Los Mangos';
+UPDATE venues SET image_url = 'https://larepublica.cronosmedia.glr.pe/original/2024/09/20/66edf1744d91182fc67e459f.jpg' WHERE name = 'Centro de Convenciones Cerro Juli';
+UPDATE venues SET image_url = 'https://agavevillas.com/wp-content/uploads/2025/11/1678737805.jpg' WHERE name = 'Villa Los Arcos';
+UPDATE venues SET image_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPuTi9NYXzzARm6Fc8HTK21-QVUmRkedvapRZcuyYK6A&s=10' WHERE name = 'Jardines de Cayma';
+UPDATE venues SET image_url = 'https://diarioelpueblo.com.pe/wp-content/uploads/2023/06/11-.jpg' WHERE name = 'Palacio Metropolitano de Bellas Artes';
+UPDATE venues SET image_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6pfPFfIB_pLROEhlWOEVYsbEMJY_43bPA1EaOeymEMJTA_x9qLEbU0t-R&s=10' WHERE name = 'Hacienda Los Bustamante';
+UPDATE venues SET image_url = 'https://lafabricadeeventos.com/img/utils/Hero.jpg' WHERE name = 'Salón Real Arequipa';
+UPDATE venues SET image_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8_PW2eiFC5Q0ZGWwNiNoBpgC_79QfQm_hiWkTYbkMTBzzskzXcWXVaisY&s=10' WHERE name = 'Villa El Campestre';
+UPDATE venues SET image_url = 'https://cdn0.bodas.com.mx/vendor/1013/3_2/1280/jpg/casona-1_5_111013.jpeg' WHERE name = 'La Casona del Sol';
+UPDATE venues SET image_url = 'https://cache.marriott.com/content/dam/marriott-renditions/LIMWI/limwi-ballroom-dance-floor-9195-hor-clsc.jpg?output-quality=70&interpolation=progressive-bilinear&downsize=1200px:*' WHERE name = 'Terraza Misti Sunset';
+UPDATE venues SET image_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcOm2UQSrhSWpHclzQU64-Futqv5msPaaNL9YskDenFT6q57gvMR_NjNnJ&s=10' WHERE name = 'Fundo San José';
+UPDATE venues SET image_url = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRY9rRSpOixRBamk8H_6NegSOXCuArbit4xgUZxITeCS71aTm-1fBKwRDI&s=10' WHERE name = 'Club de Tiro Bellavista';

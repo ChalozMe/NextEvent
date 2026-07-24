@@ -9,6 +9,14 @@ import "./ChronogramPage.css";
 
 type TaskFilter = "ALL" | "PENDING" | "IN_PROGRESS" | "COMPLETED";
 
+const PHASE_LABELS: Record<string, { label: string; number: string; unit: string }> = {
+  '6_meses_antes': { label: '🎯 6 Meses Antes del Evento', number: '6M', unit: 'Antes' },
+  '3_meses_antes': { label: '🎯 3 Meses Antes del Evento', number: '3M', unit: 'Antes' },
+  '1_mes_antes': { label: '🎯 1 Mes Antes del Evento', number: '1M', unit: 'Antes' },
+  '1_semana_antes': { label: '🎯 1 Semana Antes del Evento', number: '1W', unit: 'Antes' },
+  'dia_evento': { label: '🎉 Día del Evento', number: 'HOY', unit: 'Evento' }
+};
+
 const ChronogramPage = () => {
   const [event, setEvent] = useState<NexEvent | null>(null);
   const [tasks, setTasks] = useState<EventTask[]>([]);
@@ -235,7 +243,7 @@ const ChronogramPage = () => {
     <div className="chronogram-container">
       <div className="chrono-header-top">
         <Link to="/" className="back-link">
-          ← Volver a mi evento
+          ← Volver a mi Dashboard
         </Link>
 
         <div className="chrono-actions">
@@ -270,6 +278,17 @@ const ChronogramPage = () => {
             </span>
             .
           </p>
+
+          {/* Progress Bar */}
+          <div className="chrono-progress-section">
+            <div className="chrono-progress-header">
+              <span>Progreso del evento</span>
+              <span className="chrono-progress-percent">{progressPercent}% completado ({completedCount}/{tasks.length} tareas)</span>
+            </div>
+            <div className="chrono-progress-bar-bg">
+              <div className="chrono-progress-bar-fill" style={{ width: `${progressPercent}%` }}></div>
+            </div>
+          </div>
         </div>
 
         <div className="chrono-event-info">
@@ -332,6 +351,11 @@ const ChronogramPage = () => {
           >
             <span className="status-dot green"></span>
             Completadas
+          </button>
+
+          {/* Prominent New Task Button */}
+          <button className="btn-new-task" onClick={() => setShowModal(true)}>
+            <span>+</span> Nueva tarea
           </button>
         </div>
 
@@ -434,7 +458,7 @@ const ChronogramPage = () => {
             )
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

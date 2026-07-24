@@ -73,14 +73,15 @@ export interface Venue {
   name: string;
   description: string;
   address: string;
+  district: string;
   capacity: number;
-  pricePerHour: number;
+  price: number;
   rating: number;
   reviewCount: number;
   category: string;
   amenities: string[];
+  image: string;
   images: string[];
-  availability: VenueAvailability[];
 }
 
 export interface VenueAvailability {
@@ -129,9 +130,12 @@ export interface CreateEventRequest {
   name: string;
   type: string;
   eventDate: string;
+  startDate?: string;
+  endDate?: string;
   capacity: number;
   location: string;
   description: string;
   status: string;
   budget: number;
+  coverImage?: string;
 }

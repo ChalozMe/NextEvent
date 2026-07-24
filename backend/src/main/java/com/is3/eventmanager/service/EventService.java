@@ -56,6 +56,7 @@ public class EventService {
       event.setName(request.getName());
       event.setType(request.getType());
       event.setEventDate(request.getEventDate());
+      event.setEndDate(request.getEndDate() != null ? request.getEndDate() : request.getEventDate());
       event.setCapacity(request.getCapacity());
 
       event.setLocation(request.getLocation());
@@ -66,7 +67,7 @@ public class EventService {
       event.setBudget(request.getBudget());
       event.setBudgetUsed(BigDecimal.ZERO);
 
-      event.setCoverImage(null);
+      event.setCoverImage(request.getCoverImage());
 
       event = eventRepository.save(event);
 

@@ -4,27 +4,50 @@ import { eventService } from "../services/eventService";
 import type { CreateEventRequest } from "../types";
 import './CreateEventPage.css';
 
-type EventType = 'Boda' | 'Quinceañero' | 'Empresarial';
+type EventType = 'Boda' | 'Quinceañero' | 'Empresarial' | 'Social';
+
+const AREQUIPA_DISTRICTS = [
+  'Yanahuara, Arequipa',
+  'Sabandía, Arequipa',
+  'Cayma, Arequipa',
+  'Sachaca, Arequipa',
+  'Cercado, Arequipa',
+  'José Luis Bustamante, Arequipa',
+  'Selva Alegre, Arequipa',
+  'Socabaya, Arequipa',
+  'Characato, Arequipa',
+  'Tiabaya, Arequipa',
+  'Cerro Colorado, Arequipa'
+];
 
 const CreateEventPage = () => {
   const navigate = useNavigate();
   const [eventType, setEventType] = useState<EventType>('Boda');
-  const [date, setDate] = useState('2025-07-20');
+  const [startDate, setStartDate] = useState('2027-07-20');
+  const [endDate, setEndDate] = useState('2027-07-20');
   const [capacity, setCapacity] = useState('200');
   const [budget, setBudget] = useState('7000.00');
   
   const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState(AREQUIPA_DISTRICTS[0]);
   const [description, setDescription] = useState("");
   const [coverImage, setCoverImage] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
+    if (endDate < startDate) {
+      alert("La fecha de fin no puede ser anterior a la fecha de inicio.");
+      return;
+    }
+
+    // Format ISO LocalDateTime strings (YYYY-MM-DDTHH:mm:ss) expected by Java Jackson
     const event: CreateEventRequest = {
       name,
       type: eventType,
-      eventDate: `${date}T18:00:00`,
+      eventDate: `${startDate}T18:00:00`,
+      startDate: `${startDate}T00:00:00`,
+      endDate: `${endDate}T23:59:59`,
       capacity: Number(capacity),
       location,
       description,
@@ -36,16 +59,17 @@ const CreateEventPage = () => {
     try {
       await eventService.createEvent(event);
       navigate("/");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("No se pudo crear el evento");
+      alert(err.message || "No se pudo crear el evento");
     }
   };
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return 'No seleccionada';
     try {
-      const d = new Date(dateStr);
+      const parts = dateStr.split('-').map(Number);
+      const d = new Date(parts[0], parts[1] - 1, parts[2]);
       if (isNaN(d.getTime())) return dateStr;
       const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
       return d.toLocaleDateString('es-ES', options);
@@ -57,7 +81,7 @@ const CreateEventPage = () => {
   const formatCurrency = (amount: string) => {
     const num = parseFloat(amount);
     if (isNaN(num)) return '$ 0.00';
-    return `$ ${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `S/ ${num.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
@@ -68,15 +92,6 @@ const CreateEventPage = () => {
           <span>Eventos</span>
           <span>&gt;</span>
           <span>Nuevo evento</span>
-        </div>
-        <div className="create-header-actions">
-          <div className="action-icon">
-            🔔
-            <span className="notification-badge">3</span>
-          </div>
-          <button className="btn-new-event">
-            <span>+</span> Nuevo evento
-          </button>
         </div>
       </div>
 
@@ -94,9 +109,9 @@ const CreateEventPage = () => {
           <h2 className="form-section-title">Información del evento</h2>
           
           <div className="form-group-custom">
-            <label className="form-label-custom">Tipo de evento *</label>
+            <label className="form-label-custom">Nombre del evento *</label>
             <span className="form-hint">
-              Nombre que aparecerá el sistema.
+              Nombre descriptivo que aparecerá en el sistema.
             </span>
 
             <div className="input-with-icon">
@@ -107,11 +122,12 @@ const CreateEventPage = () => {
                 className="input-custom"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Personalizame"
+                placeholder="Ej. Mi Boda de Ensueño en Arequipa"
                 required
               />
             </div>
             
+            <label className="form-label-custom" style={{ marginTop: '1.25rem' }}>Tipo de evento *</label>
             <div className="type-cards">
               <label className={`type-card ${eventType === 'Boda' ? 'selected' : ''}`}>
                 <div className="type-icon boda">♥</div>
@@ -157,19 +173,40 @@ const CreateEventPage = () => {
             </div>
           </div>
 
-          <div className="form-group-custom">
-            <label className="form-label-custom">Fecha del evento *</label>
-            <span className="form-hint">La fecha debe ser futura.</span>
-            <div className="input-with-icon">
-              <span className="input-icon-left">📅</span>
-              <input 
-                type="date" 
-                className="input-custom" 
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-              <span className="input-icon-right" style={{pointerEvents: 'none'}}>📅</span>
+          {/* Date Range Inputs */}
+          <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group-custom">
+              <label className="form-label-custom">Fecha de Inicio *</label>
+              <span className="form-hint">Día inicial del evento.</span>
+              <div className="input-with-icon">
+                <span className="input-icon-left">📅</span>
+                <input 
+                  type="date" 
+                  className="input-custom" 
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    if (endDate < e.target.value) setEndDate(e.target.value);
+                  }}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group-custom">
+              <label className="form-label-custom">Fecha de Fin *</label>
+              <span className="form-hint">Día final del evento.</span>
+              <div className="input-with-icon">
+                <span className="input-icon-left">📅</span>
+                <input 
+                  type="date" 
+                  className="input-custom" 
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate}
+                  required
+                />
+              </div>
             </div>
           </div>
 
@@ -194,7 +231,7 @@ const CreateEventPage = () => {
               <label className="form-label-custom">Presupuesto estimado *</label>
               <span className="form-hint">Ingresa el presupuesto total del evento.</span>
               <div className="input-with-icon">
-                <span className="input-icon-left">$</span>
+                <span className="input-icon-left">S/</span>
                 <input 
                   type="number" 
                   className="input-custom" 
@@ -207,25 +244,31 @@ const CreateEventPage = () => {
               </div>
             </div>
 
+            {/* Arequipa District Dropdown Selector */}
             <div className="form-group-custom">
               <label className="form-label-custom">
-                Ubicación
+                Ubicación / Distrito (Arequipa) *
               </label>
 
               <span className="form-hint">
-                Lugar donde se realizará el evento.
+                Distrito de Arequipa donde se realizará el evento.
               </span>
 
               <div className="input-with-icon">
                 <span className="input-icon-left">📍</span>
-
-              <input
-                type="text"
-                className="input-custom"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Centro de Convenciones..."
-              />
+                <select
+                  className="input-custom"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  style={{ cursor: 'pointer', appearance: 'auto' }}
+                  required
+                >
+                  {AREQUIPA_DISTRICTS.map((dist) => (
+                    <option key={dist} value={dist}>
+                      {dist}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -261,8 +304,6 @@ const CreateEventPage = () => {
               />
             </div>
           </div>
-
-
 
           <div className="info-box">
             <span>ℹ️</span> Al guardar, este evento quedará asociado a tu cuenta como organizador.
@@ -306,21 +347,25 @@ const CreateEventPage = () => {
               <span className="preview-item-value">{eventType}</span>
             </div>
             <div className="preview-item">
-              <span className="preview-item-label"><span>📅</span> Fecha del evento</span>
-              <span className="preview-item-value">{formatDate(date)}</span>
+              <span className="preview-item-label"><span>📅</span> Fechas del evento</span>
+              <span className="preview-item-value">
+                {startDate === endDate 
+                  ? formatDate(startDate) 
+                  : `${formatDate(startDate)} al ${formatDate(endDate)}`}
+              </span>
             </div>
             <div className="preview-item">
               <span className="preview-item-label"><span>👥</span> Aforo estimado</span>
               <span className="preview-item-value">{capacity || '0'} personas</span>
             </div>
             <div className="preview-item">
-              <span className="preview-item-label"><span>$</span> Presupuesto estimado</span>
+              <span className="preview-item-label"><span>💰</span> Presupuesto estimado</span>
               <span className="preview-item-value">{formatCurrency(budget)}</span>
             </div>
 
             <div className="preview-item">
               <span className="preview-item-label">
-                📍 Ubicación
+                📍 Ubicación / Distrito
               </span>
 
               <span className="preview-item-value">

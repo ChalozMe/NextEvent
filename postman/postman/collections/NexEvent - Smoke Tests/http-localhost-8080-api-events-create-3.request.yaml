@@ -1,0 +1,22 @@
+$kind: http-request
+name: http://localhost:8080/api/events (Create Event)
+url: http://localhost:8080/api/events
+method: POST
+headers:
+  - key: "Authorization"
+    value: "Bearer {{JWT_TOKEN}}"
+  - key: "Content-Type"
+    value: "application/json"
+body:
+  type: json
+  content: "{\n    \"name\": \"Boda de Prueba\",\n    \"type\": \"Boda\",\n    \"eventDate\": \"2027-10-20T18:00:00\",\n    \"capacity\": 150,\n    \"location\": \"Jardín Los Olivos\",\n    \"description\": \"Evento de validación de QA\",\n    \"budget\": 20000.00,\n    \"coverImage\": \"\",\n    \"status\": \"Planificado\"\n}"
+order: 3724975298469070
+scripts:
+  - type: afterResponse
+    code: |
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test("Response is Event created", function () {
+          pm.expect(pm.response.text()).to.equal("Event created");
+      });

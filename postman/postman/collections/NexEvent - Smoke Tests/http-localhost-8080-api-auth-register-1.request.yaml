@@ -1,0 +1,17 @@
+$kind: http-request
+name: http://localhost:8080/api/auth/register
+description: ""
+url: http://localhost:8080/api/auth/register
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"name\": \"Tester QA\",\r
+
+    \    \"email\": \"smoke-test@nexevent.com\",\r
+
+    \    \"password\": \"Password123\"\r
+
+    }"
+order: 3790799041006291

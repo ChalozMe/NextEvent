@@ -1,0 +1,32 @@
+$kind: http-request
+name: http://localhost:8080/api/events event2
+description: ""
+url: http://localhost:8080/api/events
+method: POST
+headers:
+  Authorization: Bearer {{JWT_TOKEN}}
+  Content-Type: application/json
+body:
+  type: json
+  content: "{ \r
+
+    \    \"name\": \"Boda Smoke Test\",\r
+
+    \    \"type\": \"Boda\",\r
+
+    \    \"eventDate\": \"2027-12-31T20:00:00\",\r
+
+    \    \"capacity\": 199,\r
+
+    \    \"location\": \"Salón Real\",\r
+
+    \    \"description\": \"Evento QA\",\r
+
+    \    \"budget\": 15000.0,\r
+
+    \    \"coverImage\": \"\",\r
+
+    \    \"status\": \"PENDING\"\r
+
+    }"
+order: 4262113793225011

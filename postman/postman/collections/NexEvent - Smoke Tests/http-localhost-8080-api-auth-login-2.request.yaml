@@ -1,0 +1,24 @@
+$kind: http-request
+name: http://localhost:8080/api/auth/login
+url: http://localhost:8080/api/auth/login
+method: POST
+body:
+  type: json
+  content: |-
+    {
+        "email": "test@nexevent.com",
+        "password": "Test1234"
+    }
+examples: .resources/http-localhost-8080-api-auth-login.resources/examples
+order: 2459308456635239
+scripts:
+  - type: afterResponse
+    code: |
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test("Response contains token", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData.token).to.not.be.undefined;
+          pm.environment.set("JWT_TOKEN", jsonData.token);
+      });

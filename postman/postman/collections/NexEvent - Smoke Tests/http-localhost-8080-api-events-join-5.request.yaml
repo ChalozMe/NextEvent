@@ -1,0 +1,23 @@
+$kind: http-request
+name: http://localhost:8080/api/events/{eventId}/join
+url: http://localhost:8080/api/events/{{EVENT_ID}}/join
+method: POST
+headers:
+  Authorization: Bearer {{JWT_TOKEN}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+        "userId": 2
+    }
+order: 3724975298469071
+scripts:
+  - type: afterResponse
+    code: |
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test("Response is User registered", function () {
+          pm.expect(pm.response.text()).to.equal("User registered");
+      });

@@ -13,6 +13,7 @@ public class EventRequest {
     private String name;
     private String type;
     private LocalDateTime eventDate;
+    private LocalDateTime endDate;
     private Integer capacity;
 
     private String location;

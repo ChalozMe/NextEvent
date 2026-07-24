@@ -20,6 +20,9 @@ public class Event {
     @Column(name = "event_date")
     private LocalDateTime eventDate;
 
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
     private Integer capacity;
 
     private String location;
@@ -54,6 +57,10 @@ public class Event {
 
     public LocalDateTime getEventDate() {
         return eventDate;
+    }
+
+    public LocalDateTime getEndDate() {
+        return endDate;
     }
 
     public Integer getCapacity() {
@@ -94,6 +101,10 @@ public class Event {
 
     public void setEventDate(LocalDateTime eventDate) {
         this.eventDate = eventDate;
+    }
+
+    public void setEndDate(LocalDateTime endDate) {
+        this.endDate = endDate;
     }
 
     public void setCapacity(Integer capacity) {

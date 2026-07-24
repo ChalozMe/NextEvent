@@ -86,7 +86,7 @@ export const eventService = {
   async getTasks(eventId: string): Promise<EventTask[]> {
     const token = localStorage.getItem("nexevent_token");
 
-    const response = await fetch(`${API_URL}/${eventId}/tasks`, {
+    const response = await fetch(`http://localhost:8080/api/tasks/event/${eventId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

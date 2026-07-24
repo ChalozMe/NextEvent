@@ -53,6 +53,11 @@
   background: #F1F5F9;
   color: #1E293B;
 }
+.btn-icon-circular.active, .btn-icon-square.active {
+  background: #FEE2E2;
+  color: #EF4444;
+  border-color: #FCA5A5;
+}
 
 .btn-reserve-header {
   background-color: #6366F1;
@@ -452,25 +457,38 @@
   color: #94A3B8;
   margin-bottom: 0.5rem;
 }
-.calendar-day {
-  font-size: 0.85rem;
-  color: #1E293B;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  border-radius: 50%;
-  cursor: pointer;
+.calendar-day.disponible {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
 }
-.calendar-day.other-month {
-  color: #CBD5E1;
-}
-.calendar-day.selected {
-  background: #6366F1;
+.calendar-day.disponible:hover {
+  background: #10B981;
   color: white;
-  font-weight: 600;
+}
+
+.calendar-day.reservado {
+  background: #FEE2E2;
+  color: #991B1B;
+  text-decoration: line-through;
+  cursor: not-allowed;
+  border: 1px solid #FCA5A5;
+}
+
+.calendar-day.mantenimiento {
+  background: #FEF3C7;
+  color: #92400E;
+  text-decoration: line-through;
+  cursor: not-allowed;
+  border: 1px solid #FDE68A;
+}
+
+.calendar-day.selected {
+  background: #6366F1 !important;
+  color: white !important;
+  font-weight: 700;
+  border: 2px solid #4338CA !important;
+  text-decoration: none !important;
 }
 
 .calendar-legend {
@@ -491,7 +509,7 @@
 }
 .legend-dot.disponible { background: #10B981; }
 .legend-dot.reservado { background: #EF4444; }
-.legend-dot.consulta { background: #F59E0B; }
+.legend-dot.mantenimiento { background: #F59E0B; }
 
 /* Reviews Card */
 .reviews-header {
