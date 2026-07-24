@@ -41,12 +41,13 @@ const CreateEventPage = () => {
       return;
     }
 
+    // Format ISO LocalDateTime strings (YYYY-MM-DDTHH:mm:ss) expected by Java Jackson
     const event: CreateEventRequest = {
       name,
       type: eventType,
       eventDate: `${startDate}T18:00:00`,
-      startDate,
-      endDate,
+      startDate: `${startDate}T00:00:00`,
+      endDate: `${endDate}T23:59:59`,
       capacity: Number(capacity),
       location,
       description,
@@ -58,9 +59,9 @@ const CreateEventPage = () => {
     try {
       await eventService.createEvent(event);
       navigate("/");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("No se pudo crear el evento");
+      alert(err.message || "No se pudo crear el evento");
     }
   };
 
