@@ -1,4 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from "react";
+import {
+  userService,
+  type UserProfile,
+} from "../services/userService";
+
 import { Link } from 'react-router-dom';
 import './SettingsPage.css';
 
@@ -8,30 +13,55 @@ function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('perfil');
   const [isSaving, setIsSaving] = useState(false);
   const [alert, setAlert] = useState<{ msg: string, type: 'success' | 'error' } | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Estados del formulario (Mock)
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile: UserProfile =
+          await userService.getCurrentUser();
+
+        setForm((currentForm) => ({
+          ...currentForm,
+          nombre: profile.name,
+          email: profile.email,
+        }));
+      } catch (error) {
+        console.error("Error al cargar el perfil:", error);
+
+        setAlert({
+          msg: "No se pudo cargar la información del usuario.",
+          type: "error",
+        });
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+
+
   const [form, setForm] = useState({
-    nombre: 'María López',
-    email: 'maria.lopez@example.com',
-    telefono: '+51 987 654 321',
-    empresa: 'Eventos Mágicos SAC',
-    
-    // Notificaciones
+    nombre: "",
+    email: "",
+    telefono: "",
+    empresa: "",
+
     notifRsvp: true,
     notifFotos: true,
     notifResenas: false,
     notifIA: true,
 
-    // Preferencias
-    zonaHoraria: 'America/Lima',
-    moneda: 'PEN',
-    formatoFecha: 'DD/MM/YYYY',
+    zonaHoraria: "America/Lima",
+    moneda: "PEN",
+    formatoFecha: "DD/MM/YYYY",
 
-    // Privacidad
     galeriaPublica: false,
     permitirDescargas: true,
-    mostrarListaInvitados: false
+    mostrarListaInvitados: false,
   });
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -43,21 +73,76 @@ function SettingsPage() {
     }
   };
 
-  const handleSave = () => {
-    setIsSaving(true);
-    setAlert(null);
-    
-    // Simular guardado
+const handleSave = async () => {
+  setAlert(null);
+
+  if (!form.nombre.trim()) {
+    setAlert({
+      msg: "El nombre no puede estar vacío.",
+      type: "error",
+    });
+    return;
+  }
+
+  if (!form.email.trim()) {
+    setAlert({
+      msg: "El correo no puede estar vacío.",
+      type: "error",
+    });
+    return;
+  }
+
+  setIsSaving(true);
+
+  try {
+    const updatedProfile =
+      await userService.updateCurrentUser({
+        name: form.nombre.trim(),
+        email: form.email.trim(),
+      });
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      nombre: updatedProfile.name,
+      email: updatedProfile.email,
+    }));
+
+    setAlert({
+      msg: "Los cambios se han guardado correctamente.",
+      type: "success",
+    });
+  } catch (error) {
+    console.error("Error al guardar configuración:", error);
+
+    setAlert({
+      msg:
+        error instanceof Error
+          ? error.message
+          : "No se pudieron guardar los cambios.",
+      type: "error",
+    });
+  } finally {
+    setIsSaving(false);
+
     setTimeout(() => {
-      setIsSaving(false);
-      setAlert({ msg: 'Los cambios se han guardado correctamente.', type: 'success' });
-      setTimeout(() => setAlert(null), 4000);
-    }, 800);
-  };
+      setAlert(null);
+    }, 4000);
+  }
+};
+
 
   const renderContent = () => {
     switch (activeTab) {
       case 'perfil':
+        
+        if (loadingProfile) {
+          return (
+            <div className="settings-page">
+              <p>Cargando configuración...</p>
+            </div>
+          );
+        }
+
         return (
           <div className="settings__section animate-fade-in">
             <h2 className="settings__panel-title">Perfil Público</h2>
@@ -261,9 +346,12 @@ function SettingsPage() {
 
       {/* Alerta */}
       {alert && (
-        <div className="alert alert--success animate-fade-in-down" style={{ marginBottom: '1.5rem' }}>
-          {alert.msg}
-        </div>
+      <div
+        className={`alert alert--${alert.type} animate-fade-in-down`}
+        style={{ marginBottom: "1.5rem" }}
+          >
+        {alert.msg}
+      </div>
       )}
 
       {/* Contenido (Tabs + Form) */}
