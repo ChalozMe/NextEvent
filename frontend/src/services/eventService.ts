@@ -77,7 +77,7 @@ export const eventService = {
   async getTasks(eventId: string): Promise<EventTask[]> {
     const token = localStorage.getItem("nexevent_token");
 
-    const response = await fetch(`${API_URL}/${eventId}/tasks`, {
+    const response = await fetch(`http://localhost:8080/api/tasks/event/${eventId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -85,6 +85,42 @@ export const eventService = {
 
     if (!response.ok) {
       throw new Error("No se pudieron obtener las tareas");
+    }
+
+    return response.json();
+  },
+
+  async updateTaskStatus(taskId: number, status: string): Promise<EventTask> {
+    const token = localStorage.getItem("nexevent_token");
+    const response = await fetch(`http://localhost:8080/api/tasks/${taskId}/status`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      throw new Error("No se pudo actualizar el estado de la tarea");
+    }
+
+    return response.json();
+  },
+
+  async createTask(eventId: string, taskData: Partial<EventTask>): Promise<EventTask> {
+    const token = localStorage.getItem("nexevent_token");
+    const response = await fetch(`http://localhost:8080/api/tasks/event/${eventId}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(taskData),
+    });
+
+    if (!response.ok) {
+      throw new Error("No se pudo crear la tarea");
     }
 
     return response.json();

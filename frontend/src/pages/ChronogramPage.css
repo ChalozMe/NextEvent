@@ -53,21 +53,39 @@
   background-color: #4F46E5;
 }
 
-/* Main Title Area */
+/* Main Title Area & Event Switcher */
 .chrono-title-area {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
-.chrono-title h1 {
+.chrono-title {
   font-size: 2rem;
   font-weight: 700;
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.event-switcher-select {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #CBD5E1;
+  background: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #4338CA;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.event-switcher-select:hover {
+  border-color: #6366F1;
 }
 
 .chrono-subtitle {
@@ -122,6 +140,7 @@
 .filter-group {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .filter-btn {
@@ -158,31 +177,16 @@
 .status-dot.blue { background: #3B82F6; }
 .status-dot.green { background: #10B981; }
 
-.btn-calendar-view {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid #E2E8F0;
-  border-radius: 0.5rem;
-  background: white;
-  color: #6366F1;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
 /* Timeline */
 .timeline-container {
   position: relative;
-  padding-left: 5rem; /* Space for the milestone boxes */
+  padding-left: 5rem;
 }
 
-/* Vertical connecting line */
 .timeline-container::before {
   content: '';
   position: absolute;
-  left: 7rem; /* Centers the line with the circles */
+  left: 7rem;
   top: 0;
   bottom: 0;
   width: 2px;
@@ -222,7 +226,7 @@
 
 .timeline-circle {
   position: absolute;
-  left: 1.6rem; /* Center of the vertical line */
+  left: 1.6rem;
   top: 1.2rem;
   width: 14px;
   height: 14px;
@@ -282,11 +286,25 @@
 }
 
 .task-checkbox-circle {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 2px solid #CBD5E1;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: white;
+  transition: all 0.2s;
+}
+.task-checkbox-circle.completada {
+  background: #10B981;
+  border-color: #10B981;
+}
+.task-checkbox-circle.progreso {
+  border-color: #3B82F6;
+  background: #EFF6FF;
 }
 
 .task-name {
@@ -315,7 +333,6 @@
 }
 
 .task-status-container {
-  width: 100px;
   display: flex;
   justify-content: flex-end;
 }
@@ -325,23 +342,133 @@
   border-radius: 1rem;
   font-size: 0.75rem;
   font-weight: 600;
+  user-select: none;
+  transition: transform 0.1s;
+}
+.status-pill:hover {
+  transform: scale(1.05);
 }
 .status-pill.completada {
   background: #ECFDF5;
   color: #10B981;
+  border: 1px solid #A7F3D0;
 }
 .status-pill.progreso {
   background: #EFF6FF;
   color: #3B82F6;
+  border: 1px solid #BFDBFE;
 }
 .status-pill.pendiente {
   background: #FFF7ED;
   color: #F97316;
+  border: 1px solid #FED7AA;
 }
 
-.task-menu {
+/* Modal Overlay & Dialog */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 1rem;
+  width: 90%;
+  max-width: 500px;
+  padding: 2rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.modal-header h2 {
+  font-size: 1.25rem;
+  margin: 0;
+  color: #1E293B;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
   color: #94A3B8;
   cursor: pointer;
-  padding: 0.5rem;
-  margin-left: 1rem;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #6366F1;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.btn-cancel {
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #E2E8F0;
+  background: white;
+  color: #64748B;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-save {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: #6366F1;
+  color: white;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-save:hover {
+  background: #4F46E5;
 }
