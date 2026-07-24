@@ -130,6 +130,8 @@ export interface CreateEventRequest {
   name: string;
   type: string;
   eventDate: string;
+  startDate?: string;
+  endDate?: string;
   capacity: number;
   location: string;
   description: string;

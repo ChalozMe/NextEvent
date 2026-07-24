@@ -53,6 +53,7 @@ public class EventService {
       event.setName(request.getName());
       event.setType(request.getType());
       event.setEventDate(request.getEventDate());
+      event.setEndDate(request.getEndDate() != null ? request.getEndDate() : request.getEventDate());
       event.setCapacity(request.getCapacity());
 
       event.setLocation(request.getLocation());
