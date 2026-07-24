@@ -99,7 +99,8 @@ const DashboardPage = () => {
 
         if (data.length > 0) {
           setSelectedEvent(data[0]);
-        }
+          localStorage.setItem("selected_event", data[0].id);
+      }
       } catch (error) {
         console.error("Error al cargar eventos:", error);
       } finally {
@@ -184,7 +185,10 @@ const DashboardPage = () => {
             value={selectedEvent?.id}
             onChange={(e) => {
               const event = events.find(ev => ev.id === e.target.value);
-              if (event) setSelectedEvent(event);
+              if (event) {
+                setSelectedEvent(event);
+                localStorage.setItem("selected_event", event.id);
+              }
             }}
             style={{ padding: '0.6rem 1rem', borderRadius: '0.5rem', border: '1px solid #CBD5E1', fontWeight: '600', color: '#4F46E5', cursor: 'pointer' }}
           >
