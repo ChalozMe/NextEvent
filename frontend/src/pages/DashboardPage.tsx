@@ -14,10 +14,13 @@ const DashboardPage = () => {
   const [tasks, setTasks] = useState<EventTask[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Calculations for active event
+  // Calculations for active event budget
   const budgetPercent = selectedEvent && selectedEvent.budget > 0
     ? Math.round((selectedEvent.budgetUsed / selectedEvent.budget) * 100)
     : 0;
+
+  const budgetBalance = selectedEvent ? selectedEvent.budget - selectedEvent.budgetUsed : 0;
+  const isOverBudget = budgetBalance < 0;
 
   const daysRemaining = selectedEvent
     ? Math.max(
@@ -202,20 +205,33 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Presupuesto Utilizado */}
+        {/* Presupuesto Utilizado / Balance (Dynamic venue reservation integration) */}
         <div className="kpi-card">
           <div className="kpi-card__header">
             <div className="kpi-card__title-group">
               <div className="kpi-icon kpi-icon--blue">💰</div>
-              <span className="kpi-title">Presupuesto Utilizado</span>
+              <span className="kpi-title">Presupuesto Reservas</span>
             </div>
             <span className="kpi-more">•••</span>
           </div>
-          <div className="kpi-value">S/ {selectedEvent.budgetUsed.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</div>
+          <div className="kpi-value" style={{ color: isOverBudget ? '#EF4444' : '#0F172A' }}>
+            S/ {selectedEvent.budgetUsed.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+          </div>
           <div className="kpi-footer">
-            <span>de S/ {selectedEvent.budget.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</span>
+            {isOverBudget ? (
+              <span style={{ color: '#EF4444', fontWeight: '600' }}>
+                ⚠️ Excedido por S/ {Math.abs(budgetBalance).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+              </span>
+            ) : (
+              <span style={{ color: '#10B981', fontWeight: '600' }}>
+                ✅ Restante S/ {budgetBalance.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+              </span>
+            )}
             <div className="kpi-progress-bar">
-              <div className="kpi-progress-fill kpi-progress-fill--blue" style={{ width: `${budgetPercent}%` }}></div>
+              <div 
+                className={`kpi-progress-fill ${isOverBudget ? 'kpi-progress-fill--orange' : 'kpi-progress-fill--blue'}`} 
+                style={{ width: `${Math.min(budgetPercent, 100)}%`, background: isOverBudget ? '#EF4444' : undefined }}
+              ></div>
             </div>
           </div>
         </div>
@@ -422,28 +438,33 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Presupuesto (Dynamic formatting) */}
+          {/* Presupuesto y Reservas (Dynamic formatting & Overbudget warning) */}
           <div className="dash-card">
-            <h2 className="dash-card__title">Presupuesto en Soles</h2>
+            <h2 className="dash-card__title">Presupuesto y Reservas (Soles)</h2>
             <div className="budget-gauge-container">
               <div className="gauge-chart">
                 <div className="gauge-inner">
-                  <span className="gauge-amount">S/ {selectedEvent.budgetUsed.toLocaleString('es-PE')}</span>
+                  <span className="gauge-amount" style={{ color: isOverBudget ? '#EF4444' : '#1E293B' }}>
+                    S/ {selectedEvent.budgetUsed.toLocaleString('es-PE')}
+                  </span>
                   <span className="gauge-total">de S/ {selectedEvent.budget.toLocaleString('es-PE')}</span>
                 </div>
               </div>
               <div className="budget-legend chart-legend">
                 <div className="legend-item">
                   <div className="legend-label">
-                    <span className="dot dot--blue"></span> Gastado
+                    <span className="dot dot--blue"></span> Gastado en Reservas
                   </div>
                   <span className="legend-value">S/ {selectedEvent.budgetUsed.toLocaleString('es-PE')}</span>
                 </div>
                 <div className="legend-item">
                   <div className="legend-label">
-                    <span className="dot" style={{ background: '#E2E8F0' }}></span> Restante
+                    <span className="dot" style={{ background: isOverBudget ? '#EF4444' : '#10B981' }}></span> 
+                    {isOverBudget ? 'Exceso' : 'Saldo Restante'}
                   </div>
-                  <span className="legend-value">S/ {(selectedEvent.budget - selectedEvent.budgetUsed).toLocaleString('es-PE')}</span>
+                  <span className="legend-value" style={{ color: isOverBudget ? '#EF4444' : '#10B981', fontWeight: '700' }}>
+                    S/ {Math.abs(budgetBalance).toLocaleString('es-PE')}
+                  </span>
                 </div>
               </div>
             </div>

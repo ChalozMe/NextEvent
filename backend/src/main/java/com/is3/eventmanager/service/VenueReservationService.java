@@ -2,12 +2,18 @@ package com.is3.eventmanager.service;
 
 import com.is3.eventmanager.dto.ReservationRequest;
 import com.is3.eventmanager.dto.ReservationResponse;
+import com.is3.eventmanager.entity.Event;
+import com.is3.eventmanager.entity.Venue;
 import com.is3.eventmanager.entity.VenueReservation;
+import com.is3.eventmanager.repository.EventRepository;
+import com.is3.eventmanager.repository.VenueRepository;
 import com.is3.eventmanager.repository.VenueReservationRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,10 +21,18 @@ import java.util.List;
 public class VenueReservationService {
 
     private final VenueReservationRepository reservationRepository;
+    private final VenueRepository venueRepository;
+    private final EventRepository eventRepository;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public VenueReservationService(VenueReservationRepository reservationRepository) {
+    public VenueReservationService(
+            VenueReservationRepository reservationRepository,
+            VenueRepository venueRepository,
+            EventRepository eventRepository
+    ) {
         this.reservationRepository = reservationRepository;
+        this.venueRepository = venueRepository;
+        this.eventRepository = eventRepository;
     }
 
     public List<ReservationResponse> getReservationsByVenue(Long venueId) {
@@ -94,6 +108,20 @@ public class VenueReservationService {
         reservation.setStatus("RESERVED");
 
         reservationRepository.save(reservation);
+
+        // Accumulate venue reservation cost into event budget_used
+        Venue venue = venueRepository.findById(venueId).orElse(null);
+        Event event = eventRepository.findById(request.getEventId()).orElse(null);
+
+        if (venue != null && event != null) {
+            long daysCount = ChronoUnit.DAYS.between(reqStart, reqEnd) + 1;
+            BigDecimal dailyRate = venue.getReferencePrice() != null ? venue.getReferencePrice() : BigDecimal.ZERO;
+            BigDecimal reservationCost = dailyRate.multiply(BigDecimal.valueOf(daysCount));
+
+            BigDecimal currentUsed = event.getBudgetUsed() != null ? event.getBudgetUsed() : BigDecimal.ZERO;
+            event.setBudgetUsed(currentUsed.add(reservationCost));
+            eventRepository.save(event);
+        }
 
         List<String> reservedDates = new ArrayList<>();
         LocalDate curr = reqStart;
