@@ -1,8 +1,0 @@
-$kind: http-request
-name: http://localhost:8080/api/events
-url: http://localhost:8080/api/events
-method: GET
-headers:
-  - key: "Authorization"
-    value: "Bearer {{JWT_TOKEN}}"
-order: 3724975298469069

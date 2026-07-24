@@ -1,0 +1,21 @@
+$kind: http-request
+name: http://localhost:8080/api/events
+url: http://localhost:8080/api/events
+method: GET
+headers:
+  - key: "Authorization"
+    value: "Bearer {{JWT_TOKEN}}"
+order: 3724975298469069
+scripts:
+  - type: afterResponse
+    code: |
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+      pm.test("Extract created event ID", function () {
+          var events = pm.response.json();
+          pm.expect(events).to.be.an('array').that.is.not.empty;
+          var lastEvent = events[events.length - 1];
+          pm.expect(lastEvent.id).to.not.be.undefined;
+          pm.environment.set("EVENT_ID", lastEvent.id.toString());
+      });
